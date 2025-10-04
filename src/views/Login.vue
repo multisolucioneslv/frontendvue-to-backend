@@ -1,7 +1,10 @@
 <template>
-  <div class="login-container">
-    <div class="login-card">
+  <div class="login-container" :style="containerStyle">
+    <div class="login-card" :class="{ 'minimal-card': loginTemplate === 'minimal' }">
       <div class="login-header">
+        <div v-if="logo" class="login-logo">
+          <img :src="logo" alt="Logo" />
+        </div>
         <h1>Bienvenido</h1>
         <p>Inicia sesión en tu cuenta</p>
       </div>
@@ -76,7 +79,7 @@
         </button>
       </form>
 
-      <div class="signup-link">
+      <div v-if="showRegister" class="signup-link">
         ¿No tienes cuenta? <a href="#">Regístrate</a>
       </div>
     </div>
@@ -84,15 +87,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
+import { useSettings } from '@/composables/useSettings';
 
 export default defineComponent({
   name: 'LoginView',
   setup() {
     const authStore = useAuthStore();
     const router = useRouter();
+    const { settings, loadSettings } = useSettings();
 
     const loginType = ref<'username' | 'email'>('username');
     const showPassword = ref(false);
@@ -129,6 +134,70 @@ export default defineComponent({
       }
     };
 
+    // Computed properties para configuraciones de branding
+    const loginBackground = computed(() => {
+      return settings.value?.branding?.loginBackground || '';
+    });
+    const logo = computed(() => {
+      return settings.value?.branding?.logo || '';
+    });
+    const loginTemplate = computed(() => {
+      return settings.value?.branding?.loginTemplate || 'default';
+    });
+    const showRegister = computed(() => {
+      return settings.value?.branding?.showRegister ?? true;
+    });
+
+    // Estilos dinámicos basados en configuración
+    const containerStyle = computed(() => {
+      const styles: any = {};
+      const backgroundSize = settings.value?.branding?.backgroundSize || 'cover';
+      const backgroundPosition = settings.value?.branding?.backgroundPosition || 'center';
+      const backgroundRepeat = settings.value?.branding?.backgroundRepeat || 'no-repeat';
+      const backgroundAttachment = settings.value?.branding?.backgroundAttachment || 'scroll';
+
+      if (loginBackground.value) {
+        styles.backgroundImage = `url(${loginBackground.value})`;
+        styles.backgroundSize = backgroundSize;
+        styles.backgroundPosition = backgroundPosition;
+        styles.backgroundRepeat = backgroundRepeat;
+        styles.backgroundAttachment = backgroundAttachment;
+      }
+
+      // Aplicar estilos según el template seleccionado
+      switch (loginTemplate.value) {
+        case 'modern':
+          if (loginBackground.value) {
+            styles.background = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${loginBackground.value})`;
+            styles.backgroundSize = backgroundSize;
+            styles.backgroundPosition = backgroundPosition;
+            styles.backgroundRepeat = backgroundRepeat;
+            styles.backgroundAttachment = backgroundAttachment;
+          }
+          break;
+        case 'minimal':
+          styles.background = '#ffffff';
+          break;
+        case 'gradient':
+          if (!loginBackground.value) {
+            styles.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
+            styles.backgroundSize = '200% 200%';
+            styles.animation = 'gradientShift 10s ease infinite';
+          }
+          break;
+        default:
+          if (!loginBackground.value) {
+            styles.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+          }
+      }
+
+      return styles;
+    });
+
+    onMounted(() => {
+      loadSettings();
+    });
+
     return {
       loginType,
       showPassword,
@@ -136,7 +205,12 @@ export default defineComponent({
       credentials,
       handleLogin,
       isLoading,
-      errorMessage
+      errorMessage,
+      loginBackground,
+      logo,
+      loginTemplate,
+      showRegister,
+      containerStyle
     };
   }
 });
@@ -173,9 +247,39 @@ export default defineComponent({
   }
 }
 
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.login-logo {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-logo img {
+  max-width: 200px;
+  max-height: 80px;
+  object-fit: contain;
+}
+
 .login-header {
   text-align: center;
   margin-bottom: 30px;
+}
+
+.minimal-card {
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .login-header h1 {

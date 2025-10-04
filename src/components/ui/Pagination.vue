@@ -1,18 +1,32 @@
 <template>
   <div class="flex items-center justify-between px-2">
     <div class="flex-1 text-sm text-muted-foreground">
-      Mostrando {{ from }} a {{ to }} de {{ total }} resultados
+      Mostrando {{ from }} a {{ to }} de {{ total }} entradas
     </div>
-    <div class="flex items-center space-x-2">
+    <div class="flex items-center space-x-1">
+      <!-- Primera página -->
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="currentPage === 1"
+        @click="$emit('change', 1)"
+        class="h-8 w-8 p-0"
+      >
+        ««
+      </Button>
+      
+      <!-- Página anterior -->
       <Button
         variant="outline"
         size="sm"
         :disabled="currentPage === 1"
         @click="$emit('change', currentPage - 1)"
+        class="h-8 w-8 p-0"
       >
-        Anterior
+        «
       </Button>
 
+      <!-- Números de página -->
       <div class="flex items-center gap-1">
         <Button
           v-for="page in displayPages"
@@ -21,19 +35,32 @@
           size="sm"
           @click="page !== '...' && $emit('change', page)"
           :disabled="page === '...'"
-          class="min-w-[40px]"
+          class="h-8 w-8 p-0"
         >
           {{ page }}
         </Button>
       </div>
 
+      <!-- Página siguiente -->
       <Button
         variant="outline"
         size="sm"
         :disabled="currentPage === lastPage"
         @click="$emit('change', currentPage + 1)"
+        class="h-8 w-8 p-0"
       >
-        Siguiente
+        »
+      </Button>
+      
+      <!-- Última página -->
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="currentPage === lastPage"
+        @click="$emit('change', lastPage)"
+        class="h-8 w-8 p-0"
+      >
+        »»
       </Button>
     </div>
   </div>

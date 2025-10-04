@@ -22,7 +22,7 @@
           leave-from-class="opacity-100 scale-100"
           leave-to-class="opacity-0 scale-95"
         >
-          <div v-if="open" class="relative z-50 grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg">
+          <div v-if="open" :class="['relative z-50 grid w-full gap-4 border bg-background p-6 shadow-lg sm:rounded-lg', $props.class]">
             <div class="flex flex-col space-y-1.5 text-center sm:text-left">
               <h2 class="text-lg font-semibold leading-none tracking-tight">
                 <slot name="title">{{ title }}</slot>
@@ -49,6 +49,7 @@ defineProps<{
   open: boolean;
   title?: string;
   description?: string;
+  class?: string;
 }>();
 
 const emit = defineEmits<{

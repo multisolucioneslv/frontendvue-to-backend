@@ -10,6 +10,12 @@ import Categories from '../views/Categories.vue'
 import Users from '../views/Users.vue'
 import Profile from '../views/Profile.vue'
 import Settings from '../views/Settings.vue'
+import Documentation from '../views/Documentation.vue'
+import GeneralSettings from '../views/settings/GeneralSettings.vue'
+import AppearanceSettings from '../views/settings/AppearanceSettings.vue'
+import CompanyInfoSettings from '../views/settings/CompanyInfoSettings.vue'
+import BrandingSettings from '../views/settings/BrandingSettings.vue'
+import ViewsSettings from '../views/settings/ViewsSettings.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -70,6 +76,42 @@ const routes: Array<RouteRecordRaw> = [
         name: 'settings',
         component: Settings,
         meta: { viewKey: 'settings' }
+      },
+      {
+        path: 'settings/general',
+        name: 'settings-general',
+        component: GeneralSettings,
+        meta: { viewKey: 'settings' }
+      },
+      {
+        path: 'settings/appearance',
+        name: 'settings-appearance',
+        component: AppearanceSettings,
+        meta: { viewKey: 'settings' }
+      },
+      {
+        path: 'settings/company',
+        name: 'settings-company',
+        component: CompanyInfoSettings,
+        meta: { viewKey: 'settings' }
+      },
+      {
+        path: 'settings/branding',
+        name: 'settings-branding',
+        component: BrandingSettings,
+        meta: { viewKey: 'settings' }
+      },
+      {
+        path: 'settings/views',
+        name: 'settings-views',
+        component: ViewsSettings,
+        meta: { viewKey: 'settings' }
+      },
+      {
+        path: 'documentation',
+        name: 'documentation',
+        component: Documentation,
+        meta: { viewKey: 'documentation' }
       }
     ]
   },
@@ -104,6 +146,10 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/settings',
     redirect: '/app/settings'
+  },
+  {
+    path: '/documentation',
+    redirect: '/app/documentation'
   }
 ]
 

@@ -7,19 +7,44 @@
       </Button>
     </div>
 
-    <div class="flex items-center gap-4">
-      <div class="relative flex-1">
+    <!-- Controles superiores -->
+    <div class="flex items-center justify-between mb-4">
+      <!-- Selector de entradas por página (izquierda) -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-muted-foreground">Mostrar</span>
+        <select 
+          v-model="perPage" 
+          @change="handlePerPageChange"
+          class="px-2 py-1 border rounded text-sm bg-white dark:bg-gray-700"
+        >
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all">Todos</option>
+        </select>
+        <span class="text-sm text-muted-foreground">entradas por página</span>
+      </div>
+      
+      <!-- Barra de búsqueda (derecha) -->
+      <div class="relative">
         <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           v-model="searchQuery"
-          placeholder="Buscar por nombre o descripción..."
-          class="pl-10"
+          placeholder="Buscar..."
+          class="pl-10 w-64"
           @input="handleSearch"
         />
       </div>
     </div>
 
-    <DataTable :columns="columns" :data="filteredCategories">
+    <DataTable 
+      :columns="columns" 
+      :data="filteredCategories"
+      :sort-by="sortBy"
+      :sort-order="sortOrderComputed"
+      @sort="handleSortChange"
+    >
       <template #header>
         <div></div>
       </template>
@@ -115,6 +140,11 @@ const categories = ref<Category[]>([]);
 const showModal = ref(false);
 const editingCategory = ref<Category | null>(null);
 const searchQuery = ref('');
+
+// Variables para ordenamiento y paginación
+const sortBy = ref('name');
+const sortOrder = ref('asc');
+const perPage = ref('10');
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -125,9 +155,9 @@ const pagination = ref({
 });
 
 const columns = [
-  { key: 'name', label: 'Nombre' },
-  { key: 'description', label: 'Descripción' },
-  { key: 'active', label: 'Estado' },
+  { key: 'name', label: 'Nombre', sortable: true },
+  { key: 'description', label: 'Descripción', sortable: true },
+  { key: 'active', label: 'Estado', sortable: true },
 ];
 
 const form = ref<Category>({
@@ -138,7 +168,14 @@ const form = ref<Category>({
 
 const loadCategories = async (page = 1) => {
   try {
-    const response = await axios.get(`${API_ENDPOINTS.CATEGORIES}?page=${page}`);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      sort_by: sortBy.value,
+      sort_order: sortOrder.value,
+      per_page: perPage.value
+    });
+    
+    const response = await axios.get(`${API_ENDPOINTS.CATEGORIES}?${params}`);
 
     if (response.data.pagination) {
       categories.value = response.data.data.data || response.data.data;
@@ -171,6 +208,18 @@ const filteredCategories = computed(() => {
     return name.includes(query) || description.includes(query);
   });
 });
+
+const sortOrderComputed = computed(() => sortOrder.value as 'asc' | 'desc');
+
+const handleSortChange = (key: string, order: 'asc' | 'desc') => {
+  sortBy.value = key;
+  sortOrder.value = order;
+  loadCategories(1);
+};
+
+const handlePerPageChange = () => {
+  loadCategories(1);
+};
 
 const handleSearch = () => {
   // La búsqueda se realiza automáticamente mediante el computed

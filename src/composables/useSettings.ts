@@ -1,15 +1,15 @@
 import { ref, computed, watch } from 'vue'
 
-// Estado global de configuraciones
+// Estado global de configuraciones con branding completo
 const settings = ref({
   // Configuraciones de fuente
   fontFamily: 'Inter',
-  fontSize: 16,
-  
+  fontSize: 14,
+
   // Configuraciones de color
   primaryColor: '#ffffff',
   secondaryColor: '#f8fafc',
-  
+
   // Configuraciones de vistas/funcionalidades
   views: {
     dashboard: true,
@@ -21,14 +21,67 @@ const settings = ref({
     profile: true,
     settings: true
   },
-  
+
   // Configuraciones de tema
   theme: 'light',
-  
+
   // Configuraciones adicionales
-  animations: true,
-  sounds: false,
-  notifications: true
+  animations: true, // Animaciones habilitadas por defecto
+  sounds: false, // Sonidos deshabilitados por defecto
+  notifications: true, // Notificaciones habilitadas por defecto
+  
+  // Configuraciones de idioma y región
+  language: 'es', // Español por defecto
+  timezone: 'America/Mexico_City', // Zona horaria por defecto
+  dateFormat: 'DD/MM/YYYY', // Formato de fecha por defecto
+  currency: 'MXN', // Moneda por defecto
+  
+  // Configuraciones de privacidad
+  analytics: false, // Analytics deshabilitado por defecto
+  cookies: false, // Cookies deshabilitadas por defecto
+  dataCollection: false, // Recopilación de datos deshabilitada por defecto
+  
+  // Configuraciones de seguridad
+  sessionTimeout: 30, // Timeout de sesión en minutos (30 min por defecto)
+  passwordPolicy: 'medium', // Política de contraseñas: low, medium, high
+  twoFactorAuth: false, // Autenticación de dos factores deshabilitada por defecto
+  loginAttempts: 5, // Intentos de login permitidos
+  
+  // Configuraciones de rendimiento
+  cacheEnabled: true, // Cache habilitado por defecto
+  lazyLoading: true, // Carga perezosa habilitada por defecto
+  imageOptimization: true, // Optimización de imágenes habilitada por defecto
+
+  // Configuraciones de branding y login
+  branding: {
+    loginBackground: '', // URL o base64 de imagen de fondo del login
+    logo: '', // URL o base64 del logo de la empresa
+    favicon: '', // URL o base64 del favicon
+    loginTemplate: 'default' as string, // Template de login seleccionado: default, modern, minimal, gradient
+    showRegister: true, // Mostrar u ocultar el área de registro
+    // Configuraciones de imagen de fondo
+    backgroundSize: 'cover' as string,
+    backgroundPosition: 'center' as string,
+    backgroundRepeat: 'no-repeat' as string,
+    backgroundAttachment: 'scroll' as string,
+        // Información de la empresa
+        companyName: '', // Nombre de la empresa/sistema (vacío por defecto)
+        companySlogan: '', // Slogan de la empresa
+        companyDescription: '', // Descripción de la empresa
+        companyWebsite: '', // Sitio web de la empresa
+        companyEmail: '', // Email de contacto
+        companyPhone: '', // Teléfono de contacto
+        companyPhone2: '', // Teléfono secundario
+        companyWhatsApp: '', // WhatsApp
+        companyAddress: '', // Dirección de la empresa
+        companyLatitude: '', // Latitud GPS
+        companyLongitude: '', // Longitud GPS
+        companySchedule: {
+          weekdays: { start: '', end: '' }, // Horarios vacíos por defecto
+          saturday: { start: '', end: '' }, // Horarios vacíos por defecto
+          sunday: { start: '', end: '' } // Horarios vacíos por defecto
+        }
+  }
 })
 
 // Fuentes disponibles
@@ -45,34 +98,62 @@ const availableFonts = ref([
 
 // Colores disponibles
 const availableColors = ref([
-  { 
-    id: 'neutral', 
-    name: 'Neutro (Blanco)', 
-    primary: '#ffffff', 
-    secondary: '#f8fafc', 
-    isNeutral: true, 
-    editable: false 
+  {
+    id: 'neutral',
+    name: 'Neutro (Blanco)',
+    primary: '#ffffff',
+    secondary: '#f8fafc',
+    isNeutral: true,
+    editable: false
   },
-  { 
-    id: 'blue-purple', 
-    name: 'Azul Púrpura', 
-    primary: '#667eea', 
-    secondary: '#764ba2', 
-    editable: true 
+  {
+    id: 'blue-purple',
+    name: 'Azul Púrpura',
+    primary: '#667eea',
+    secondary: '#764ba2',
+    editable: true
   },
-  { 
-    id: 'pink-red', 
-    name: 'Rosa Rojo', 
-    primary: '#f093fb', 
-    secondary: '#f5576c', 
-    editable: true 
+  {
+    id: 'pink-red',
+    name: 'Rosa Rojo',
+    primary: '#f093fb',
+    secondary: '#f5576c',
+    editable: true
   },
-  { 
-    id: 'green-turquoise', 
-    name: 'Verde Turquesa', 
-    primary: '#43e97b', 
-    secondary: '#38f9d7', 
-    editable: true 
+  {
+    id: 'green-turquoise',
+    name: 'Verde Turquesa',
+    primary: '#43e97b',
+    secondary: '#38f9d7',
+    editable: true
+  }
+])
+
+// Templates de login disponibles
+const loginTemplates = ref([
+  {
+    id: 'default',
+    name: 'Clásico',
+    description: 'Diseño clásico con gradiente de fondo',
+    preview: 'https://via.placeholder.com/400x300/667eea/ffffff?text=Clasico'
+  },
+  {
+    id: 'modern',
+    name: 'Moderno',
+    description: 'Diseño moderno con imagen de fondo y overlay',
+    preview: 'https://via.placeholder.com/400x300/764ba2/ffffff?text=Moderno'
+  },
+  {
+    id: 'minimal',
+    name: 'Minimalista',
+    description: 'Diseño minimalista con fondo blanco',
+    preview: 'https://via.placeholder.com/400x300/f8fafc/667eea?text=Minimalista'
+  },
+  {
+    id: 'gradient',
+    name: 'Gradiente Dinámico',
+    description: 'Diseño con gradiente personalizado animado',
+    preview: 'https://via.placeholder.com/400x300/f093fb/ffffff?text=Gradiente'
   }
 ])
 
@@ -83,13 +164,45 @@ export function useSettings() {
     if (saved) {
       try {
         const parsedSettings = JSON.parse(saved)
-        settings.value = { ...settings.value, ...parsedSettings }
+        // Asegurar que branding existe incluso si no está en los datos guardados
+        settings.value = {
+          ...settings.value,
+          ...parsedSettings,
+          branding: {
+            loginBackground: '',
+            logo: '',
+            favicon: '',
+            loginTemplate: 'default',
+            showRegister: true,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'scroll',
+            companyName: '',
+            companySlogan: '',
+            companyDescription: '',
+            companyWebsite: '',
+            companyEmail: '',
+            companyPhone: '',
+            companyPhone2: '',
+            companyWhatsApp: '',
+            companyAddress: '',
+            companyLatitude: '',
+            companyLongitude: '',
+            companySchedule: {
+              weekdays: { start: '', end: '' },
+              saturday: { start: '', end: '' },
+              sunday: { start: '', end: '' }
+            },
+            ...parsedSettings.branding
+          }
+        }
       } catch (error) {
         console.error('Error loading settings:', error)
         // Si hay error, usar valores por defecto
         settings.value = {
           fontFamily: 'Inter',
-          fontSize: 16,
+          fontSize: 14,
           primaryColor: '#ffffff',
           secondaryColor: '#f8fafc',
           views: {
@@ -105,14 +218,55 @@ export function useSettings() {
           theme: 'light',
           animations: true,
           sounds: false,
-          notifications: true
+          notifications: true,
+          language: 'es',
+          timezone: 'America/Mexico_City',
+          dateFormat: 'DD/MM/YYYY',
+          currency: 'MXN',
+          analytics: false,
+          cookies: false,
+          dataCollection: false,
+          sessionTimeout: 30,
+          passwordPolicy: 'medium',
+          twoFactorAuth: false,
+          loginAttempts: 5,
+          cacheEnabled: true,
+          lazyLoading: true,
+          imageOptimization: true,
+          branding: {
+            loginBackground: '',
+            logo: '',
+            favicon: '',
+            loginTemplate: 'default',
+            showRegister: true,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'scroll',
+            companyName: '',
+            companySlogan: '',
+            companyDescription: '',
+            companyWebsite: '',
+            companyEmail: '',
+            companyPhone: '',
+            companyPhone2: '',
+            companyWhatsApp: '',
+            companyAddress: '',
+            companyLatitude: '',
+            companyLongitude: '',
+            companySchedule: {
+              weekdays: { start: '', end: '' },
+              saturday: { start: '', end: '' },
+              sunday: { start: '', end: '' }
+            }
+          }
         }
       }
     } else {
       // Si no hay configuraciones guardadas, usar valores por defecto
       settings.value = {
         fontFamily: 'Inter',
-        fontSize: 16,
+        fontSize: 14,
         primaryColor: '#ffffff',
         secondaryColor: '#f8fafc',
         views: {
@@ -128,7 +282,48 @@ export function useSettings() {
         theme: 'light',
         animations: true,
         sounds: false,
-        notifications: true
+        notifications: true,
+        language: 'es',
+        timezone: 'America/Mexico_City',
+        dateFormat: 'DD/MM/YYYY',
+        currency: 'MXN',
+        analytics: false,
+        cookies: false,
+        dataCollection: false,
+        sessionTimeout: 30,
+        passwordPolicy: 'medium',
+        twoFactorAuth: false,
+        loginAttempts: 5,
+        cacheEnabled: true,
+        lazyLoading: true,
+        imageOptimization: true,
+        branding: {
+          loginBackground: '',
+          logo: '',
+          favicon: '',
+          loginTemplate: 'default',
+          showRegister: true,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'scroll',
+          companyName: 'Sistema',
+          companySlogan: '',
+          companyDescription: '',
+          companyWebsite: '',
+          companyEmail: '',
+          companyPhone: '',
+          companyPhone2: '',
+          companyWhatsApp: '',
+          companyAddress: '',
+          companyLatitude: '',
+          companyLongitude: '',
+          companySchedule: {
+            weekdays: { start: '09:00', end: '18:00' },
+            saturday: { start: '09:00', end: '14:00' },
+            sunday: { start: 'Cerrado', end: 'Cerrado' }
+          }
+        }
       }
     }
     
@@ -478,7 +673,7 @@ export function useSettings() {
   const resetSettings = () => {
     settings.value = {
       fontFamily: 'Inter',
-      fontSize: 16,
+      fontSize: 14,
       primaryColor: '#ffffff',
       secondaryColor: '#f8fafc',
       views: {
@@ -494,13 +689,54 @@ export function useSettings() {
       theme: 'light',
       animations: true,
       sounds: false,
-      notifications: true
+      notifications: true,
+      language: 'es',
+      timezone: 'America/Mexico_City',
+      dateFormat: 'DD/MM/YYYY',
+      currency: 'MXN',
+      analytics: false,
+      cookies: false,
+      dataCollection: false,
+      sessionTimeout: 30,
+      passwordPolicy: 'medium',
+      twoFactorAuth: false,
+      loginAttempts: 5,
+      cacheEnabled: true,
+      lazyLoading: true,
+      imageOptimization: true,
+      branding: {
+        loginBackground: '',
+        logo: '',
+        favicon: '',
+        loginTemplate: 'default',
+        showRegister: true,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'scroll',
+        companyName: '',
+        companySlogan: '',
+        companyDescription: '',
+        companyWebsite: '',
+        companyEmail: '',
+        companyPhone: '',
+        companyPhone2: '',
+        companyWhatsApp: '',
+        companyAddress: '',
+        companyLatitude: '',
+        companyLongitude: '',
+        companySchedule: {
+          weekdays: { start: '', end: '' }, // Horarios vacíos por defecto
+          saturday: { start: '', end: '' }, // Horarios vacíos por defecto
+          sunday: { start: '', end: '' } // Horarios vacíos por defecto
+        }
+      }
     }
     saveSettings()
-    
+
     // Aplicar configuraciones inmediatamente
     applySettings()
-    
+
     // Aplicar colores de texto
     setTimeout(() => {
       applyColorsToSidebarAndNavbar(settings.value.primaryColor, settings.value.secondaryColor)
@@ -531,13 +767,13 @@ export function useSettings() {
   const applyDefaultsIfFirstTime = () => {
     const hasSettings = localStorage.getItem('appSettings')
     const hasTheme = localStorage.getItem('theme')
-    
+
     // Si no hay configuraciones previas, aplicar valores por defecto
     if (!hasSettings) {
       console.log('Primera vez - aplicando valores por defecto')
       settings.value = {
         fontFamily: 'Inter',
-        fontSize: 16,
+        fontSize: 14,
         primaryColor: '#ffffff',
         secondaryColor: '#f8fafc',
         views: {
@@ -553,14 +789,107 @@ export function useSettings() {
         theme: 'light',
         animations: true,
         sounds: false,
-        notifications: true
+        notifications: true,
+        language: 'es',
+        timezone: 'America/Mexico_City',
+        dateFormat: 'DD/MM/YYYY',
+        currency: 'MXN',
+        analytics: false,
+        cookies: false,
+        dataCollection: false,
+        sessionTimeout: 30,
+        passwordPolicy: 'medium',
+        twoFactorAuth: false,
+        loginAttempts: 5,
+        cacheEnabled: true,
+        lazyLoading: true,
+        imageOptimization: true,
+        branding: {
+          loginBackground: '',
+          logo: '',
+          favicon: '',
+          loginTemplate: 'default',
+          showRegister: true,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'scroll',
+          companyName: 'Sistema',
+          companySlogan: '',
+          companyDescription: '',
+          companyWebsite: '',
+          companyEmail: '',
+          companyPhone: '',
+          companyPhone2: '',
+          companyWhatsApp: '',
+          companyAddress: '',
+          companyLatitude: '',
+          companyLongitude: '',
+          companySchedule: {
+            weekdays: { start: '09:00', end: '18:00' },
+            saturday: { start: '09:00', end: '14:00' },
+            sunday: { start: 'Cerrado', end: 'Cerrado' }
+          }
+        }
       }
       saveSettings()
     }
-    
+
     // Si no hay tema guardado, usar tema claro por defecto
     if (!hasTheme) {
       localStorage.setItem('theme', 'light')
+    }
+  }
+
+  // Funciones para manejar configuraciones de branding
+  const updateBrandingImage = (type: 'loginBackground' | 'logo' | 'favicon', imageData: string) => {
+    if (settings.value.branding) {
+      settings.value.branding[type] = imageData
+      saveSettings()
+
+      // Aplicar favicon inmediatamente si es el caso
+      if (type === 'favicon' && imageData) {
+        applyFavicon(imageData)
+      }
+    }
+  }
+
+  const updateLoginTemplate = (templateId: string) => {
+    if (settings.value.branding) {
+      settings.value.branding.loginTemplate = templateId
+      saveSettings()
+    }
+  }
+
+  const toggleShowRegister = () => {
+    if (settings.value.branding) {
+      settings.value.branding.showRegister = !settings.value.branding.showRegister
+      saveSettings()
+    }
+  }
+
+  const applyFavicon = (faviconData: string) => {
+    // Remover favicon existente
+    const existingFavicon = document.querySelector("link[rel*='icon']")
+    if (existingFavicon) {
+      existingFavicon.remove()
+    }
+
+    // Agregar nuevo favicon
+    const link = document.createElement('link')
+    link.rel = 'icon'
+    link.type = 'image/png'
+    link.href = faviconData
+    document.head.appendChild(link)
+  }
+
+  // Guardar configuraciones de branding
+  const saveBrandingSettings = () => {
+    localStorage.setItem('appSettings', JSON.stringify(settings.value))
+
+    // Aplicar favicon si existe
+    if (settings.value.branding?.favicon) {
+      applyFavicon(settings.value.branding.favicon)
     }
   }
 
@@ -573,12 +902,14 @@ export function useSettings() {
     settings: computed(() => settings.value),
     availableFonts: computed(() => availableFonts.value),
     availableColors: computed(() => availableColors.value),
+    loginTemplates: computed(() => loginTemplates.value),
     loadSettings,
     saveSettings,
     saveFontSettings,
     saveColorSettings,
     saveViewSettings,
     saveExperienceSettings,
+    saveBrandingSettings,
     applySettings,
     applyTheme,
     applyDefaultsIfFirstTime,
@@ -595,6 +926,10 @@ export function useSettings() {
     applyViewChanges,
     applyAllViewSettings,
     resetSettings,
-    isViewEnabled
+    isViewEnabled,
+    updateBrandingImage,
+    updateLoginTemplate,
+    toggleShowRegister,
+    applyFavicon
   }
 }

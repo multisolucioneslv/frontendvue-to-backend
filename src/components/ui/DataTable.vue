@@ -12,8 +12,22 @@
               v-for="column in columns"
               :key="column.key"
               class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
+              :class="{ 'cursor-pointer hover:bg-muted/30': column.sortable }"
+              @click="column.sortable ? handleSort(column.key) : null"
             >
-              {{ column.label }}
+              <div class="flex items-center gap-2">
+                <span>{{ column.label }}</span>
+                <div v-if="column.sortable" class="flex flex-col">
+                  <ArrowUp 
+                    class="h-3 w-3 transition-colors"
+                    :class="sortBy === column.key && sortOrder === 'asc' ? 'text-primary' : 'text-muted-foreground/50'"
+                  />
+                  <ArrowDown 
+                    class="h-3 w-3 -mt-1 transition-colors"
+                    :class="sortBy === column.key && sortOrder === 'desc' ? 'text-primary' : 'text-muted-foreground/50'"
+                  />
+                </div>
+              </div>
             </th>
             <th v-if="$slots.actions" class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
               Acciones
@@ -51,15 +65,38 @@
 </template>
 
 <script setup lang="ts">
+import { ArrowUp, ArrowDown } from 'lucide-vue-next';
+
 interface Column {
   key: string;
   label: string;
+  sortable?: boolean;
 }
 
-defineProps<{
+const props = defineProps<{
   columns: Column[];
   data: any[];
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }>();
+
+const emit = defineEmits<{
+  sort: [key: string, order: 'asc' | 'desc'];
+}>();
+
+const handleSort = (key: string) => {
+  let newOrder: 'asc' | 'desc' = 'asc';
+  
+  if (props.sortBy === key) {
+    // Si ya está ordenando por esta columna, cambiar el orden
+    newOrder = props.sortOrder === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Si es una nueva columna, empezar con ascendente
+    newOrder = 'asc';
+  }
+  
+  emit('sort', key, newOrder);
+};
 
 const getNestedValue = (obj: any, path: string) => {
   return path.split('.').reduce((acc, part) => acc?.[part], obj) || '-';

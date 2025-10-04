@@ -7,7 +7,8 @@
       "Read(//d/ProyectosLaragon/Laravel12APIRest/**)",
       "Bash(npm uninstall:*)",
       "Bash(npm run serve:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(php artisan:*)"
     ],
     "deny": [],
     "ask": []

@@ -7,19 +7,44 @@
       </Button>
     </div>
 
-    <div class="flex items-center gap-4">
-      <div class="relative flex-1">
+    <!-- Controles superiores -->
+    <div class="flex items-center justify-between mb-4">
+      <!-- Selector de entradas por página (izquierda) -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-muted-foreground">Mostrar</span>
+        <select 
+          v-model="perPage" 
+          @change="handlePerPageChange"
+          class="px-2 py-1 border rounded text-sm bg-white dark:bg-gray-700"
+        >
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all">Todos</option>
+        </select>
+        <span class="text-sm text-muted-foreground">entradas por página</span>
+      </div>
+      
+      <!-- Barra de búsqueda (derecha) -->
+      <div class="relative">
         <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           v-model="searchQuery"
-          placeholder="Buscar por nombre, correo o teléfono..."
-          class="pl-10"
+          placeholder="Buscar..."
+          class="pl-10 w-64"
           @input="handleSearch"
         />
       </div>
     </div>
 
-    <DataTable :columns="columns" :data="filteredCustomers">
+    <DataTable 
+      :columns="columns" 
+      :data="filteredCustomers"
+      :sort-by="sortBy"
+      :sort-order="sortOrderComputed"
+      @sort="handleSortChange"
+    >
       <template #header>
         <div></div>
       </template>
@@ -152,6 +177,11 @@ const sexOptions = ref<any[]>([]);
 const showModal = ref(false);
 const editingCustomer = ref<Customer | null>(null);
 const searchQuery = ref('');
+
+// Variables para ordenamiento y paginación
+const sortBy = ref('name');
+const sortOrder = ref('asc');
+const perPage = ref('10');
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -162,12 +192,12 @@ const pagination = ref({
 });
 
 const columns = [
-  { key: 'name', label: 'Nombre' },
-  { key: 'email', label: 'Email' },
-  { key: 'phone', label: 'Teléfono' },
-  { key: 'telegram', label: 'Telegram' },
-  { key: 'sex', label: 'Sexo' },
-  { key: 'address', label: 'Dirección' },
+  { key: 'name', label: 'Nombre', sortable: true },
+  { key: 'email', label: 'Email', sortable: true },
+  { key: 'phone', label: 'Teléfono', sortable: false },
+  { key: 'telegram', label: 'Telegram', sortable: false },
+  { key: 'sex', label: 'Sexo', sortable: false },
+  { key: 'address', label: 'Dirección', sortable: true },
 ];
 
 const form = ref<Customer>({
@@ -182,7 +212,14 @@ const form = ref<Customer>({
 
 const loadCustomers = async (page = 1) => {
   try {
-    const response = await axios.get(`${API_ENDPOINTS.CUSTOMERS}?page=${page}`);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      sort_by: sortBy.value,
+      sort_order: sortOrder.value,
+      per_page: perPage.value
+    });
+    
+    const response = await axios.get(`${API_ENDPOINTS.CUSTOMERS}?${params}`);
 
     if (response.data.pagination) {
       customers.value = response.data.data.data || response.data.data;
@@ -218,6 +255,18 @@ const filteredCustomers = computed(() => {
            phone.includes(query);
   });
 });
+
+const sortOrderComputed = computed(() => sortOrder.value as 'asc' | 'desc');
+
+const handleSortChange = (key: string, order: 'asc' | 'desc') => {
+  sortBy.value = key;
+  sortOrder.value = order;
+  loadCustomers(1);
+};
+
+const handlePerPageChange = () => {
+  loadCustomers(1);
+};
 
 const handleSearch = () => {
   // La búsqueda se realiza automáticamente mediante el computed

@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  URL_BASE: 'https://laravel12apirest.test/api'
+  URL_BASE: 'http://localhost:8000/api'
 }
 
 export const API_ENDPOINTS = {

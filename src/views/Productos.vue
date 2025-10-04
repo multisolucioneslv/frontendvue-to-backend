@@ -7,51 +7,76 @@
       </Button>
     </div>
 
-    <div class="flex items-center gap-4">
-      <div class="relative flex-1">
+    <!-- Controles superiores como en la imagen -->
+    <div class="flex items-center justify-between mb-4">
+      <!-- Selector de entradas por página (izquierda) -->
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-muted-foreground">Mostrar</span>
+        <select 
+          v-model="perPage" 
+          @change="handlePerPageChange"
+          class="px-2 py-1 border rounded text-sm bg-white dark:bg-gray-700"
+        >
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all">Todos</option>
+        </select>
+        <span class="text-sm text-muted-foreground">entradas por página</span>
+      </div>
+      
+      <!-- Barra de búsqueda (derecha) -->
+      <div class="relative">
         <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           v-model="searchQuery"
-          placeholder="Buscar por nombre o descripción..."
-          class="pl-10"
+          placeholder="Buscar..."
+          class="pl-10 w-64"
           @input="handleSearch"
         />
       </div>
-      
-      <!-- Controles de tamaño de miniaturas -->
-      <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 thumbnail-controls">
-        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Miniaturas:</span>
-        <Button 
-          @click="decreaseThumbnailSize" 
-          variant="outline" 
-          size="sm"
-          :disabled="thumbnailSize <= 30"
-          title="Reducir tamaño"
-        >
-          <Minus class="h-3 w-3" />
-        </Button>
-        <span class="text-sm font-mono min-w-[3rem] text-center">{{ thumbnailSize }}px</span>
-        <Button 
-          @click="increaseThumbnailSize" 
-          variant="outline" 
-          size="sm"
-          :disabled="thumbnailSize >= 150"
-          title="Aumentar tamaño"
-        >
-          <Plus class="h-3 w-3" />
-        </Button>
-        <Button 
-          @click="resetThumbnailSize" 
-          variant="outline" 
-          size="sm"
-          title="Tamaño por defecto"
-        >
-          <RotateCcw class="h-3 w-3" />
-        </Button>
-      </div>
     </div>
 
-    <DataTable :columns="columns" :data="filteredProductos">
+    <!-- Controles de miniaturas -->
+    <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 mb-4 thumbnail-controls">
+      <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Miniaturas:</span>
+      <Button 
+        @click="decreaseThumbnailSize" 
+        variant="outline" 
+        size="sm"
+        :disabled="thumbnailSize <= 30"
+        title="Reducir tamaño"
+      >
+        <Minus class="h-3 w-3" />
+      </Button>
+      <span class="text-sm font-mono min-w-[3rem] text-center">{{ thumbnailSize }}px</span>
+      <Button 
+        @click="increaseThumbnailSize" 
+        variant="outline" 
+        size="sm"
+        :disabled="thumbnailSize >= 150"
+        title="Aumentar tamaño"
+      >
+        <Plus class="h-3 w-3" />
+      </Button>
+      <Button 
+        @click="resetThumbnailSize" 
+        variant="outline" 
+        size="sm"
+        title="Tamaño por defecto"
+      >
+        <RotateCcw class="h-3 w-3" />
+      </Button>
+    </div>
+
+    <DataTable 
+      :columns="columns" 
+      :data="filteredProductos"
+      :sort-by="sortBy"
+      :sort-order="sortOrderComputed"
+      @sort="handleSortChange"
+    >
       <template #header>
         <div></div>
       </template>
@@ -67,6 +92,38 @@
           :all-images="item.images || []"
           @click.stop
         />
+      </template>
+
+      <template #cell-codigo="{ item }">
+        <div v-if="item.codigo" class="flex items-center gap-2">
+          <span class="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+            {{ item.codigo }}
+          </span>
+          <button 
+            @click="copyToClipboard(item.codigo)"
+            class="text-blue-600 hover:text-blue-800 text-xs"
+            title="Copiar código"
+          >
+            📋
+          </button>
+        </div>
+        <span v-else class="text-gray-400 text-sm">Sin código</span>
+      </template>
+
+      <template #cell-qr="{ item }">
+        <div v-if="item.qr" class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[150px]">
+            {{ item.qr }}
+          </span>
+          <button 
+            @click="copyToClipboard(item.qr)"
+            class="text-blue-600 hover:text-blue-800 text-xs"
+            title="Copiar QR"
+          >
+            📋
+          </button>
+        </div>
+        <span v-else class="text-gray-400 text-sm">Sin QR</span>
       </template>
 
       <template #cell-price="{ item }">
@@ -112,7 +169,9 @@
           <!-- Información Básica -->
           <div class="form-section">
             <h3 class="section-title">Información Básica</h3>
-            <div class="form-grid">
+            
+            <!-- Primera fila: Nombre, Código, QR -->
+            <div class="form-row">
               <div class="form-group">
                 <Label for="name">Nombre del Producto</Label>
                 <Input 
@@ -124,6 +183,34 @@
                 />
               </div>
               
+              <div class="form-group">
+                <Label for="codigo">Código de Barras</Label>
+                <Input 
+                  id="codigo"
+                  v-model="form.codigo" 
+                  placeholder="Ej: 1234567890123"
+                  class="form-input"
+                />
+              </div>
+              
+              <div class="form-group">
+                <Label for="qr">Código QR</Label>
+                <div class="qr-input-group">
+                  <Input 
+                    id="qr"
+                    v-model="form.qr" 
+                    placeholder="Información para código QR"
+                    class="form-input"
+                  />
+                  <Button type="button" variant="outline" size="sm" class="qr-button">
+                    Información
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Segunda fila: Precio y Stock -->
+            <div class="form-row">
               <div class="form-group">
                 <Label for="price">Precio</Label>
                 <Input 
@@ -150,6 +237,7 @@
               </div>
             </div>
             
+            <!-- Descripción -->
             <div class="form-group full-width">
               <Label for="description">Descripción</Label>
               <textarea
@@ -224,6 +312,8 @@ import { imageService } from '@/services/imageService';
 interface Producto {
   id?: number;
   name: string;
+  codigo?: string;
+  qr?: string;
   description: string;
   price: number;
   stock: number;
@@ -236,6 +326,12 @@ const editingProducto = ref<Producto | null>(null);
 const searchQuery = ref('');
 const thumbnailSize = ref(50); // Tamaño dinámico de miniaturas
 const selectedFiles = ref<File[]>([]);
+
+// Variables para ordenamiento y paginación
+const sortBy = ref('name');
+const sortOrder = ref('asc');
+const perPage = ref('10');
+
 const pagination = ref({
   current_page: 1,
   last_page: 1,
@@ -246,15 +342,18 @@ const pagination = ref({
 });
 
 const columns = [
-  { key: 'name', label: 'Nombre' },
-  { key: 'description', label: 'Descripción' },
-  { key: 'price', label: 'Precio' },
-  { key: 'stock', label: 'Stock' },
-  { key: 'image', label: 'Imagen' },
+  { key: 'name', label: 'Nombre', sortable: true },
+  { key: 'codigo', label: 'Código', sortable: true },
+  { key: 'description', label: 'Descripción', sortable: false },
+  { key: 'price', label: 'Precio', sortable: true },
+  { key: 'stock', label: 'Stock', sortable: true },
+  { key: 'image', label: 'Imagen', sortable: false },
 ];
 
 const form = ref<Producto>({
   name: '',
+  codigo: '',
+  qr: '',
   description: '',
   price: 0,
   stock: 0,
@@ -263,7 +362,14 @@ const form = ref<Producto>({
 
 const loadProductos = async (page = 1) => {
   try {
-    const response = await axios.get(`${API_ENDPOINTS.PRODUCTOS}?page=${page}`);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      sort_by: sortBy.value,
+      sort_order: sortOrder.value,
+      per_page: perPage.value
+    });
+    
+    const response = await axios.get(`${API_ENDPOINTS.PRODUCTOS}?${params}`);
 
     if (response.data.pagination) {
       productos.value = response.data.data.data || response.data.data;
@@ -282,6 +388,8 @@ const loadProductos = async (page = 1) => {
     console.error('Error loading productos:', error);
   }
 };
+
+const sortOrderComputed = computed(() => sortOrder.value as 'asc' | 'desc');
 
 const filteredProductos = computed(() => {
   if (!searchQuery.value.trim()) {
@@ -305,11 +413,34 @@ const handlePageChange = (page: number) => {
   loadProductos(page);
 };
 
+// Funciones para ordenamiento
+const handleSortChange = (key: string, order: 'asc' | 'desc') => {
+  sortBy.value = key;
+  sortOrder.value = order;
+  loadProductos(1);
+};
+
+const handlePerPageChange = () => {
+  loadProductos(1);
+};
+
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    // Aquí podrías agregar una notificación de éxito
+    console.log('Copiado al portapapeles:', text);
+  } catch (err) {
+    console.error('Error al copiar:', err);
+  }
+};
+
 const editProducto = (producto: Producto) => {
   editingProducto.value = producto;
   form.value = {
     id: producto.id,
     name: producto.name,
+    codigo: producto.codigo || '',
+    qr: producto.qr || '',
     description: producto.description,
     price: producto.price,
     stock: producto.stock,
@@ -326,9 +457,12 @@ const saveProducto = async () => {
     
     // Si hay archivos nuevos seleccionados, convertir a base64
     if (selectedFiles.value.length > 0) {
+      console.log('Convirtiendo archivos a base64...', selectedFiles.value.length, 'archivos');
       imagesToSave = await convertFilesToBase64(selectedFiles.value);
+      console.log('Imágenes convertidas:', imagesToSave.length);
     } else if (editingProducto.value?.id && form.value.images.length > 0) {
       // Si estamos editando y no hay archivos nuevos, mantener las imágenes existentes
+      console.log('Manteniendo imágenes existentes:', form.value.images.length);
       imagesToSave = form.value.images;
     }
     
@@ -337,15 +471,27 @@ const saveProducto = async () => {
       images: imagesToSave
     };
     
+    console.log('Datos a enviar:', {
+      id: editingProducto.value?.id,
+      name: productData.name,
+      imagesCount: productData.images?.length || 0,
+      images: productData.images
+    });
+    
     if (editingProducto.value?.id) {
-      await axios.put(`${API_ENDPOINTS.PRODUCTOS}/${editingProducto.value.id}`, productData);
+      console.log('Actualizando producto...');
+      const response = await axios.put(`${API_ENDPOINTS.PRODUCTOS}/${editingProducto.value.id}`, productData);
+      console.log('Respuesta del servidor:', response.data);
     } else {
-      await axios.post(API_ENDPOINTS.PRODUCTOS, productData);
+      console.log('Creando producto...');
+      const response = await axios.post(API_ENDPOINTS.PRODUCTOS, productData);
+      console.log('Respuesta del servidor:', response.data);
     }
     closeModal();
     loadProductos();
   } catch (error) {
     console.error('Error saving producto:', error);
+    console.error('Detalles del error:', (error as { response?: { data?: unknown } }).response?.data);
   }
 };
 
@@ -443,6 +589,8 @@ const closeModal = () => {
   selectedFiles.value = [];
   form.value = {
     name: '',
+    codigo: '',
+    qr: '',
     description: '',
     price: 0,
     stock: 0,
@@ -501,19 +649,31 @@ onMounted(() => {
   background-color: var(--gray-700);
 }
 
-/* Estilos para el modal de producto */
+/* Estilos para el modal de producto - FORZAR APLICACIÓN */
 :deep(.modal-producto) {
   width: 60vw !important;
   max-width: 1200px !important;
-  height: 40vh !important;
-  max-height: 500px !important;
+  height: 50vh !important;
+  max-height: 600px !important;
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 50 !important;
 }
 
-:deep(.modal-producto .dialog-content) {
+/* Forzar estilos en el contenedor del modal */
+:deep(.modal-producto .relative) {
   width: 100% !important;
   height: 100% !important;
-  padding: 0 !important;
-  margin: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Forzar estilos en el contenido del modal */
+:deep(.modal-producto .grid) {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
 }
 
 .modal-content {
@@ -523,6 +683,7 @@ onMounted(() => {
   background: white;
   border-radius: 12px;
   overflow: hidden;
+  padding: 0;
 }
 
 .dark .modal-content {
@@ -535,10 +696,20 @@ onMounted(() => {
   flex-direction: column;
   padding: 1.5rem;
   overflow-y: auto;
+  gap: 1.5rem;
 }
 
 .form-section {
   margin-bottom: 1.5rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.dark .form-section {
+  background: #2d2d2d;
+  border-color: #404040;
 }
 
 .section-title {
@@ -547,12 +718,12 @@ onMounted(() => {
   color: #1f2937;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #3b82f6;
 }
 
 .dark .section-title {
   color: #f9fafb;
-  border-bottom-color: #374151;
+  border-bottom-color: #60a5fa;
 }
 
 .form-grid {
@@ -570,6 +741,33 @@ onMounted(() => {
 
 .form-group.full-width {
   grid-column: 1 / -1;
+}
+
+/* Nuevos estilos para el layout mejorado */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+.qr-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+}
+
+.qr-input-group .form-input {
+  flex: 1;
+}
+
+.qr-button {
+  white-space: nowrap;
+  min-width: 100px;
 }
 
 .form-input,
@@ -718,22 +916,43 @@ onMounted(() => {
 @media (max-width: 1024px) {
   :deep(.modal-producto) {
     width: 80vw !important;
-    height: 50vh !important;
+    height: 60vh !important;
   }
   
   .form-grid {
     grid-template-columns: 1fr 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .qr-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .qr-button {
+    min-width: auto;
   }
 }
 
 @media (max-width: 768px) {
   :deep(.modal-producto) {
     width: 95vw !important;
-    height: 60vh !important;
+    height: 70vh !important;
   }
   
   .product-form {
     padding: 1rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-section {
+    padding: 16px;
   }
   
   .form-grid {
@@ -749,5 +968,13 @@ onMounted(() => {
   .form-actions {
     flex-direction: column;
   }
+}
+
+/* Estilos adicionales para forzar el tamaño del modal */
+.modal-producto {
+  width: 60vw !important;
+  max-width: 1200px !important;
+  height: 50vh !important;
+  max-height: 600px !important;
 }
 </style>
