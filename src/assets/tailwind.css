@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262.1 83.3% 57.8%;
+    --radius: 0.5rem;
+    
+    /* Custom settings variables */
+    --font-family: 'Inter', sans-serif;
+    --font-size: 16px;
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262.1 83.3% 57.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    font-family: var(--font-family) !important;
+    font-size: var(--font-size) !important;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-family) !important;
+    font-size: var(--font-size) !important;
+  }
+  html {
+    font-family: var(--font-family) !important;
+    font-size: var(--font-size) !important;
+  }
+}
+
+@layer components {
+  /* Sidebar styling - Colores de esquema tienen prioridad */
+  [data-sidebar] {
+    background: var(--scheme-sidebar-bg, var(--sidebar-bg, var(--background))) !important;
+    transition: all 0.3s ease !important;
+    color: var(--scheme-sidebar-text-color, var(--sidebar-text-color, inherit)) !important;
+  }
+  
+  [data-sidebar] nav a {
+    color: var(--scheme-sidebar-text-color, var(--sidebar-text-color, inherit)) !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  [data-sidebar] nav a:hover {
+    background: var(--link-hover-bg, rgba(255, 255, 255, 0.1)) !important;
+  }
+  
+  [data-sidebar] h2,
+  [data-sidebar] h3,
+  [data-sidebar] h4,
+  [data-sidebar] h5,
+  [data-sidebar] h6 {
+    color: var(--scheme-sidebar-text-color, var(--sidebar-text-color, inherit)) !important;
+  }
+  
+  [data-sidebar] button {
+    color: var(--scheme-sidebar-text-color, var(--sidebar-text-color, inherit)) !important;
+  }
+  
+  [data-sidebar] * {
+    color: var(--scheme-sidebar-text-color, var(--sidebar-text-color, inherit)) !important;
+  }
+  
+  /* Navbar styling - Colores de esquema tienen prioridad */
+  [data-navbar] {
+    background: var(--scheme-navbar-bg, var(--navbar-bg, var(--background))) !important;
+    transition: all 0.3s ease !important;
+    color: var(--scheme-navbar-text-color, var(--navbar-text-color, inherit)) !important;
+  }
+  
+  [data-navbar] h1,
+  [data-navbar] h2,
+  [data-navbar] h3,
+  [data-navbar] h4,
+  [data-navbar] h5,
+  [data-navbar] h6 {
+    color: var(--scheme-navbar-text-color, var(--navbar-text-color, inherit)) !important;
+  }
+  
+  [data-navbar] button {
+    color: var(--scheme-navbar-text-color, var(--navbar-text-color, inherit)) !important;
+  }
+  
+  [data-navbar] * {
+    color: var(--scheme-navbar-text-color, var(--navbar-text-color, inherit)) !important;
+  }
+}
