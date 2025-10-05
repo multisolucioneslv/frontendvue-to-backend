@@ -134,11 +134,26 @@ const showSettings = ref(false)
 
 // Computed properties
 const userName = computed(() => {
-  return authStore.user?.name || 'Usuario'
+  const user = authStore.user
+  if (!user) return 'Usuario'
+
+  const firstName = user.name || ''
+  const lastName = user.lastname || ''
+
+  return `${firstName} ${lastName}`.trim() || 'Usuario'
 })
 
 const userRole = computed(() => {
-  return authStore.user?.role || 'Administrador'
+  const user = authStore.user
+  if (!user) return 'Usuario'
+
+  // Si tiene roles como array (Laravel común)
+  if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
+    return user.roles[0] // Mostrar el primer rol
+  }
+
+  // Fallback al campo role si existe
+  return user.role || 'Usuario'
 })
 
 const userInitials = computed(() => {

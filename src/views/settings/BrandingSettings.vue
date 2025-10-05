@@ -9,71 +9,8 @@
     @reset="resetBrandingSettings"
   >
     <div class="settings-grid">
-      <!-- Configuración de Imágenes -->
-      <Card class="settings-card">
-        <div class="card-header">
-          <div class="header-icon">
-            <ImageIcon class="h-6 w-6" />
-          </div>
-          <div class="header-text">
-            <h3>Imágenes del Sistema</h3>
-            <p>Sube y configura las imágenes principales</p>
-          </div>
-        </div>
-        
-        <div class="card-content">
-          <!-- Logo de la Empresa -->
-          <div class="setting-group">
-            <Label class="setting-label">Logo de la Empresa</Label>
-            <div class="image-upload-container">
-              <input
-                type="file"
-                id="logo"
-                accept="image/*"
-                @change="handleImageUpload($event, 'logo')"
-                class="file-input"
-              />
-              <label for="logo" class="file-label">
-                <ImageIcon class="h-5 w-5" />
-                Seleccionar Logo
-              </label>
-              <div v-if="localSettings.branding?.logo" class="image-preview">
-                <img :src="localSettings.branding.logo" alt="Logo" />
-                <button @click="removeBrandingImage('logo')" class="remove-image-btn">
-                  <X class="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Favicon -->
-          <div class="setting-group">
-            <Label class="setting-label">Favicon</Label>
-            <div class="image-upload-container">
-              <input
-                type="file"
-                id="favicon"
-                accept="image/png,image/x-icon,image/svg+xml"
-                @change="handleImageUpload($event, 'favicon')"
-                class="file-input"
-              />
-              <label for="favicon" class="file-label">
-                <ImageIcon class="h-5 w-5" />
-                Seleccionar Favicon
-              </label>
-              <div v-if="localSettings.branding?.favicon" class="image-preview favicon-preview">
-                <img :src="localSettings.branding.favicon" alt="Favicon" />
-                <button @click="removeBrandingImage('favicon')" class="remove-image-btn">
-                  <X class="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-
       <!-- Configuración del Login -->
-      <Card class="settings-card">
+      <Card class="settings-card full-width">
         <div class="card-header">
           <div class="header-icon">
             <Eye class="h-6 w-6" />

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Debug</title>
+</head>
+<body>
+    <h1>Test de Debug</h1>
+    <button onclick="testClick()">Probar Click</button>
+    <div id="output"></div>
+
+    <script>
+        console.log('🔥 TEST SCRIPT LOADED');
+        
+        function testClick() {
+            console.log('🔥 BUTTON CLICKED IN TEST');
+            document.getElementById('output').innerHTML = 'Botón clickeado correctamente';
+        }
+        
+        console.log('🔥 TEST SCRIPT READY');
+    </script>
+</body>
+</html>

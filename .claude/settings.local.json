@@ -8,7 +8,9 @@
       "Bash(npm uninstall:*)",
       "Bash(npm run serve:*)",
       "Bash(npm run build:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Read(//d/ProyectosLaragon/**)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

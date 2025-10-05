@@ -12,7 +12,6 @@ import Customers from '../views/Customers.vue'
 import Sucursales from '../views/Sucursales.vue'
 import Categories from '../views/Categories.vue'
 import Users from '../views/Users.vue'
-import Cotizaciones from '../views/Cotizaciones.vue'
 import Profile from '../views/Profile.vue'
 import Settings from '../views/Settings.vue'
 import Documentation from '../views/Documentation.vue'
@@ -22,14 +21,13 @@ import CompanyInfoSettings from '../views/settings/CompanyInfoSettings.vue'
 import BrandingSettings from '../views/settings/BrandingSettings.vue'
 import ViewsSettings from '../views/settings/ViewsSettings.vue'
 import TimezoneSettings from '../views/settings/TimezoneSettings.vue'
-import SystemTypeSettings from '../views/settings/SystemTypeSettings.vue'
 import AdminDashboard from '../views/admin/AdminDashboard.vue'
 import SystemTypes from '../views/admin/SystemTypes.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/initial-setup'
   },
   {
     path: '/login',
@@ -42,18 +40,17 @@ const routes: Array<RouteRecordRaw> = [
     name: 'clear-sessions',
     redirect: '/clear-sessions.html'
   },
-  // TEMPORALMENTE DESHABILITADO: Ruta de configuración inicial
-  // {
-  //   path: '/initial-setup',
-  //   name: 'initial-setup',
-  //   component: InitialSetupFlow,
-  //   meta: { requiresSetupNotCompleted: true, requiresSuperAdmin: true }
-  // },
+  {
+    path: '/initial-setup',
+    name: 'initial-setup',
+    component: InitialSetupFlow,
+    meta: { requiresSetupNotCompleted: true, requiresSuperAdmin: true }
+  },
   {
     path: '/admin-setup',
     name: 'admin-setup',
     component: SuperAdminPanel,
-    meta: { requiresSuperAdmin: true }
+    meta: { requiresSetupCompleted: true, requiresSuperAdmin: true }
   },
   {
     path: '/admin-panel',
@@ -64,7 +61,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/app',
     component: AppLayout,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresSetupCompleted: true },
     children: [
       {
         path: 'dashboard',
@@ -101,12 +98,6 @@ const routes: Array<RouteRecordRaw> = [
         name: 'users',
         component: Users,
         meta: { viewKey: 'users' }
-      },
-      {
-        path: 'cotizaciones',
-        name: 'cotizaciones',
-        component: Cotizaciones,
-        meta: { viewKey: 'cotizaciones' }
       },
       {
         path: 'profile',
@@ -154,12 +145,6 @@ const routes: Array<RouteRecordRaw> = [
         path: 'settings/timezone',
         name: 'settings-timezone',
         component: TimezoneSettings,
-        meta: { viewKey: 'settings' }
-      },
-      {
-        path: 'settings/system-type',
-        name: 'settings-system-type',
-        component: SystemTypeSettings,
         meta: { viewKey: 'settings' }
       },
       {
@@ -295,20 +280,20 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // TEMPORALMENTE DESHABILITADO: Verificar configuración inicial
-  // const { requireSetupCompleted, requireSetupNotCompleted } = useSetupMiddleware()
+  // Verificar configuración inicial
+  const { requireSetupCompleted, requireSetupNotCompleted } = useSetupMiddleware()
   
-  // TEMPORALMENTE DESHABILITADO: Verificar setup inicial para rutas que lo requieren
-  // if (to.meta.requiresSetupCompleted) {
-  //   await requireSetupCompleted(to, from, next)
-  //   return
-  // }
+  // Verificar setup inicial para rutas que lo requieren
+  if (to.meta.requiresSetupCompleted) {
+    await requireSetupCompleted(to, from, next)
+    return
+  }
 
-  // TEMPORALMENTE DESHABILITADO: Verificar que el setup NO esté completado para rutas de configuración inicial
-  // if (to.meta.requiresSetupNotCompleted) {
-  //   await requireSetupNotCompleted(to, from, next)
-  //   return
-  // }
+  // Verificar que el setup NO esté completado para rutas de configuración inicial
+  if (to.meta.requiresSetupNotCompleted) {
+    await requireSetupNotCompleted(to, from, next)
+    return
+  }
   
   // Verificar si la vista está habilitada (solo para rutas con viewKey)
   if (to.meta.viewKey && typeof window !== 'undefined') {

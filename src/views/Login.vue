@@ -9,78 +9,103 @@
         <p>Inicia sesión en tu cuenta</p>
       </div>
 
-      <div class="login-options">
-        <button
-          :class="['option-btn', { active: loginType === 'username' }]"
-          @click="loginType = 'username'"
-        >
-          Usuario
+      <!-- Botón de Configuración Inicial -->
+      <div v-if="!isSetupCompleted" class="setup-section">
+        <div class="setup-message">
+          <div class="setup-icon">
+            <Settings class="h-8 w-8 text-blue-600" />
+          </div>
+          <div class="setup-text">
+            <h3>Configuración Inicial Requerida</h3>
+            <p>Antes de usar el sistema, necesitas configurar el tipo de sistema que deseas implementar.</p>
+          </div>
+        </div>
+        
+        <button @click="goToSetup" class="setup-btn">
+          <Settings class="h-5 w-5 mr-2" />
+          Configurar Sistema
         </button>
-        <button
-          :class="['option-btn', { active: loginType === 'email' }]"
-          @click="loginType = 'email'"
-        >
-          Correo
-        </button>
+        
+        <div class="setup-note">
+          <p>Una vez configurado, podrás iniciar sesión normalmente.</p>
+        </div>
       </div>
 
-      <form @submit.prevent="handleLogin" class="login-form">
-        <div class="form-group">
-          <label :for="loginType">
-            {{ loginType === 'username' ? 'Usuario' : 'Correo Electrónico' }}
-          </label>
-          <div class="input-wrapper">
-            <i :class="loginType === 'username' ? 'icon-user' : 'icon-email'"></i>
-            <input
-              :id="loginType"
-              v-model="credentials.identifier"
-              :type="loginType === 'email' ? 'email' : 'text'"
-              :placeholder="loginType === 'username' ? 'Ingresa tu usuario' : 'Ingresa tu correo'"
-              required
-            />
+      <!-- Formulario de Login (solo si está configurado) -->
+      <div v-if="isSetupCompleted">
+        <div class="login-options">
+          <button
+            :class="['option-btn', { active: loginType === 'username' }]"
+            @click="loginType = 'username'"
+          >
+            Usuario
+          </button>
+          <button
+            :class="['option-btn', { active: loginType === 'email' }]"
+            @click="loginType = 'email'"
+          >
+            Correo
+          </button>
+        </div>
+
+        <form @submit.prevent="handleLogin" class="login-form">
+          <div class="form-group">
+            <label :for="loginType">
+              {{ loginType === 'username' ? 'Usuario' : 'Correo Electrónico' }}
+            </label>
+            <div class="input-wrapper">
+              <i :class="loginType === 'username' ? 'icon-user' : 'icon-email'"></i>
+              <input
+                :id="loginType"
+                v-model="credentials.identifier"
+                :type="loginType === 'email' ? 'email' : 'text'"
+                :placeholder="loginType === 'username' ? 'Ingresa tu usuario' : 'Ingresa tu correo'"
+                required
+              />
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <div class="input-wrapper">
-            <i class="icon-lock"></i>
-            <input
-              id="password"
-              v-model="credentials.password"
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="Ingresa tu contraseña"
-              required
-            />
-            <button
-              type="button"
-              class="toggle-password"
-              @click="showPassword = !showPassword"
-            >
-              <i :class="showPassword ? 'icon-eye-off' : 'icon-eye'"></i>
-            </button>
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <div class="input-wrapper">
+              <i class="icon-lock"></i>
+              <input
+                id="password"
+                v-model="credentials.password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Ingresa tu contraseña"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                @click="showPassword = !showPassword"
+              >
+                <i :class="showPassword ? 'icon-eye-off' : 'icon-eye'"></i>
+              </button>
+            </div>
           </div>
+
+          <div class="form-options">
+            <label class="remember-me">
+              <input type="checkbox" v-model="rememberMe" />
+              <span>Recordarme</span>
+            </label>
+            <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+          </div>
+
+          <div v-if="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
+
+          <button type="submit" class="login-btn" :disabled="isLoading">
+            {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+          </button>
+        </form>
+
+        <div v-if="showRegister" class="signup-link">
+          ¿No tienes cuenta? <a href="#">Regístrate</a>
         </div>
-
-        <div class="form-options">
-          <label class="remember-me">
-            <input type="checkbox" v-model="rememberMe" />
-            <span>Recordarme</span>
-          </label>
-          <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-        </div>
-
-        <div v-if="errorMessage" class="error-message">
-          {{ errorMessage }}
-        </div>
-
-        <button type="submit" class="login-btn" :disabled="isLoading">
-          {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
-        </button>
-      </form>
-
-      <div v-if="showRegister" class="signup-link">
-        ¿No tienes cuenta? <a href="#">Regístrate</a>
       </div>
     </div>
   </div>
@@ -91,13 +116,22 @@ import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { useSettings } from '@/composables/useSettings';
+import { useInitialSetup } from '@/composables/useInitialSetup';
+import { ADMIN_CONFIG } from '@/config/admin';
+import { Settings } from 'lucide-vue-next';
 
 export default defineComponent({
   name: 'LoginView',
+  components: {
+    Settings
+  },
   setup() {
+    console.log('🔥 LOGIN COMPONENT SETUP STARTED')
+    
     const authStore = useAuthStore();
     const router = useRouter();
     const { settings, loadSettings } = useSettings();
+    const { isInitialSetupCompleted, checkSetupStatus } = useInitialSetup();
 
     const loginType = ref<'username' | 'email'>('username');
     const showPassword = ref(false);
@@ -109,6 +143,18 @@ export default defineComponent({
       identifier: '',
       password: ''
     });
+
+    // Verificar estado del setup inicial
+    const isSetupCompleted = computed(() => {
+      console.log('🔍 Login - Verificando estado del setup:', isInitialSetupCompleted.value)
+      // Por ahora usar el composable, pero después se cambiará a API directa
+      return isInitialSetupCompleted.value;
+    });
+
+    const goToSetup = () => {
+      console.log('🚀 Navegando a configuración inicial...')
+      window.location.href = '/initial-setup'
+    };
 
     const handleLogin = async () => {
       if (!credentials.value.identifier || !credentials.value.password) {
@@ -128,7 +174,22 @@ export default defineComponent({
       isLoading.value = false;
 
       if (result.success) {
-        router.push('/app/dashboard');
+        // Verificar si viene de configuración inicial
+        const setupData = localStorage.getItem('initialSetupData');
+        const isFromSetup = setupData && JSON.parse(setupData).completed;
+        
+        // Verificar si es admin y si necesita ir a configuración avanzada
+        if (isFromSetup && authStore.user && ADMIN_CONFIG.isAdminEmail(authStore.user.email)) {
+          router.push('/admin-setup');
+        } else {
+          // Verificar si el setup está completado antes de ir al dashboard
+          const setupCompleted = localStorage.getItem('initialSetupCompleted');
+          if (setupCompleted === 'true') {
+            router.push('/app/dashboard');
+          } else {
+            router.push('/initial-setup');
+          }
+        }
       } else {
         errorMessage.value = result.message || 'Error al iniciar sesión';
       }
@@ -194,8 +255,12 @@ export default defineComponent({
       return styles;
     });
 
-    onMounted(() => {
-      loadSettings();
+    onMounted(async () => {
+      console.log('🎯 Login - Componente montado')
+      await loadSettings();
+      console.log('⚙️ Login - Configuraciones cargadas')
+      await checkSetupStatus();
+      console.log('🔍 Login - Estado del setup verificado:', isInitialSetupCompleted.value)
     });
 
     return {
@@ -210,7 +275,9 @@ export default defineComponent({
       logo,
       loginTemplate,
       showRegister,
-      containerStyle
+      containerStyle,
+      isSetupCompleted,
+      goToSetup
     };
   }
 });
@@ -501,6 +568,93 @@ export default defineComponent({
   color: #764ba2;
 }
 
+/* Estilos para la sección de configuración inicial */
+.setup-section {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.setup-message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.setup-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background: #dbeafe;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
+}
+
+.setup-text {
+  text-align: left;
+  flex: 1;
+}
+
+.setup-text h3 {
+  color: #1e293b;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.setup-text p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.setup-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+  margin-bottom: 1rem;
+}
+
+.setup-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+.setup-btn:active {
+  transform: translateY(0);
+}
+
+.setup-note {
+  padding: 1rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+}
+
+.setup-note p {
+  color: #92400e;
+  font-size: 0.875rem;
+  margin: 0;
+  font-weight: 500;
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 30px 24px;
@@ -508,6 +662,19 @@ export default defineComponent({
 
   .login-header h1 {
     font-size: 28px;
+  }
+
+  .setup-message {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .setup-text {
+    text-align: center;
+  }
+
+  .setup-btn {
+    width: 100%;
   }
 }
 </style>

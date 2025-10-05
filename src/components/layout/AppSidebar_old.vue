@@ -5,9 +5,9 @@
              <div class="flex flex-col items-center gap-2">
                <!-- Logo de la empresa -->
                <div v-if="companyLogo" class="logo-container">
-                 <img
-                   :src="companyLogo"
-                   alt="Logo de la empresa"
+                 <img 
+                   :src="companyLogo" 
+                   alt="Logo de la empresa" 
                    class="company-logo"
                  />
                </div>
@@ -45,33 +45,20 @@
     <!-- Navigation -->
     <nav class="flex-1 overflow-auto p-2">
       <div class="space-y-1">
-        <!-- Dashboard siempre presente -->
+        <!-- Menu items principales -->
         <router-link
-          to="/app/dashboard"
+          v-for="item in menuItems"
+          :key="item.to"
+          :to="item.to"
+          :data-view="item.viewKey"
           :class="cn(
             'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground',
             collapsed && 'justify-center'
           )"
           active-class="bg-accent text-accent-foreground"
         >
-          <LayoutDashboard class="h-5 w-5" />
-          <span v-if="!collapsed">Dashboard</span>
-        </router-link>
-
-        <!-- Vistas tradicionales -->
-        <router-link
-          v-for="view in enabledViews"
-          :key="view.viewKey"
-          :to="view.to"
-          :data-view="view.viewKey"
-          :class="cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground',
-            collapsed && 'justify-center'
-          )"
-          active-class="bg-accent text-accent-foreground"
-        >
-          <component :is="view.icon" class="h-5 w-5" />
-          <span v-if="!collapsed">{{ view.label }}</span>
+          <component :is="item.icon" class="h-5 w-5" />
+          <span v-if="!collapsed">{{ item.label }}</span>
         </router-link>
 
         <!-- Submenú de Configuraciones -->
@@ -164,15 +151,7 @@ import {
   HelpCircle,
   ChevronDown,
   Shield,
-  Server,
-  Calendar,
-  FileText,
-  Heart,
-  ShoppingCart,
-  Scale,
-  Archive,
-  Stethoscope,
-  Building
+  Server
 } from 'lucide-vue-next';
 import SubMenu from '@/components/ui/SubMenu.vue';
 import { useSettings } from '@/composables/useSettings'
@@ -188,10 +167,9 @@ defineEmits<{
   (e: 'logout'): void;
 }>();
 
-// Stores y composables
+// Obtener el logo y nombre de la empresa desde las configuraciones
 const { settings } = useSettings()
 const authStore = useAuthStore()
-
 const companyLogo = computed(() => settings.value.branding?.logo || '')
 const companyName = computed(() => settings.value.branding?.companyName || 'Sistema')
 const companySlogan = computed(() => settings.value.branding?.companySlogan || '')
@@ -201,81 +179,15 @@ const isAdmin = computed(() => {
   return authStore.user && ADMIN_CONFIG.isAdminEmail(authStore.user.email)
 })
 
-// Mapa de iconos disponibles
-const iconMap: Record<string, any> = {
-  LayoutDashboard,
-  Package,
-  Users,
-  UserCheck,
-  Building2,
-  Building,
-  FolderOpen,
-  Settings,
-  Calendar,
-  FileText,
-  Heart,
-  ShoppingCart,
-  Scale,
-  Archive,
-  Stethoscope,
-  Server
-}
+const menuItems = [
+  { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard, viewKey: 'dashboard' },
+  { to: '/app/productos', label: 'Productos', icon: Package, viewKey: 'productos' },
+  { to: '/app/customers', label: 'Clientes', icon: Users, viewKey: 'customers' },
+  { to: '/app/sucursales', label: 'Sucursales', icon: Building2, viewKey: 'sucursales' },
+  { to: '/app/categories', label: 'Categorías', icon: FolderOpen, viewKey: 'categories' },
+  { to: '/app/users', label: 'Usuarios', icon: UserCheck, viewKey: 'users' },
+];
 
-// Función para obtener icono
-const getIcon = (iconName: string) => {
-  return iconMap[iconName] || LayoutDashboard
-}
-
-// Vistas tradicionales del sistema
-const traditionalViews = [
-  {
-    to: '/app/productos',
-    label: 'Productos',
-    icon: Package,
-    viewKey: 'productos'
-  },
-  {
-    to: '/app/customers',
-    label: 'Clientes',
-    icon: Users,
-    viewKey: 'customers'
-  },
-  {
-    to: '/app/users',
-    label: 'Usuarios',
-    icon: UserCheck,
-    viewKey: 'users'
-  },
-  {
-    to: '/app/cotizaciones',
-    label: 'Cotizaciones',
-    icon: FileText,
-    viewKey: 'cotizaciones'
-  },
-  {
-    to: '/app/sucursales',
-    label: 'Sucursales',
-    icon: Building2,
-    viewKey: 'sucursales'
-  },
-  {
-    to: '/app/categories',
-    label: 'Categorías',
-    icon: FolderOpen,
-    viewKey: 'categories'
-  }
-]
-
-// Vistas habilitadas según configuración
-const enabledViews = computed(() => {
-  return traditionalViews.filter(view => {
-    // Verificar si la vista está habilitada en settings
-    const isEnabled = settings.value.views?.[view.viewKey]
-    return isEnabled !== false // Por defecto true si no está definido
-  })
-})
-
-// Submenú de configuraciones
 const settingsSubMenuItems = [
   { to: '/app/settings/general', label: 'General', icon: Settings },
   { to: '/app/settings/appearance', label: 'Apariencia', icon: Palette },

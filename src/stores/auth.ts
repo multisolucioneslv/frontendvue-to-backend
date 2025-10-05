@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from '@/config/axios'
 import { API_ENDPOINTS } from '@/config/api'
+import { useSystemStore } from './system'
 
 interface AuthState {
   token: string | null
@@ -22,6 +23,34 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    async loadUser() {
+      if (this.token) {
+        try {
+          const response = await axios.get(API_ENDPOINTS.USER)
+          // El backend devuelve los datos del usuario directamente
+          this.user = response.data
+
+          console.log('Usuario cargado:', this.user)
+
+          // Cargar sistema del usuario después de cargar el usuario
+          await this.loadUserSystem()
+        } catch (error) {
+          console.error('Error cargando usuario:', error)
+          // Si hay error, limpiar sesión
+          this.logout()
+        }
+      }
+    },
+
+    async loadUserSystem() {
+      try {
+        const systemStore = useSystemStore()
+        await systemStore.loadCurrentSystem()
+      } catch (error) {
+        console.error('Error cargando sistema del usuario:', error)
+      }
+    },
+
     async login(credentials: { identifier: string; password: string; type: string }) {
       try {
         const loginData: any = {
@@ -40,7 +69,6 @@ export const useAuthStore = defineStore('auth', {
 
         if (response.data.token) {
           this.token = response.data.token
-          this.user = response.data.user || null
           this.isAuthenticated = true
 
           // Guardar en localStorage
@@ -48,6 +76,9 @@ export const useAuthStore = defineStore('auth', {
 
           // Configurar axios para futuras peticiones
           axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
+
+          // Cargar datos completos del usuario desde /user
+          await this.loadUser()
 
           return { success: true, data: response.data }
         }
@@ -75,12 +106,21 @@ export const useAuthStore = defineStore('auth', {
       this.isAuthenticated = false
       localStorage.removeItem('token')
       delete axios.defaults.headers.common['Authorization']
+
+      // Limpiar sistema al cerrar sesión
+      const systemStore = useSystemStore()
+      systemStore.clearSystem()
     },
 
     // Restaurar sesión desde localStorage
-    restoreSession() {
+    async restoreSession() {
       if (this.token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
+
+        // Cargar usuario y sistema si no están cargados
+        if (!this.user) {
+          await this.loadUser()
+        }
       }
     }
   }

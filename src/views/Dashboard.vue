@@ -240,12 +240,42 @@
         </router-link>
       </div>
     </div>
+
+    <!-- Sección de Administración -->
+    <div v-if="isSuperAdmin || isAdmin" class="admin-section">
+      <h2 class="section-title">Administración del Sistema</h2>
+      <div class="admin-actions">
+        <template v-if="isSuperAdmin">
+          <router-link to="/admin-setup" class="admin-button superadmin-button">
+            <Settings class="button-icon" />
+            <span>Panel SuperAdmin</span>
+          </router-link>
+          <button 
+            @click="resetSystemConfiguration"
+            :disabled="loading.reset"
+            class="reset-button"
+          >
+            <RotateCcw class="button-icon" />
+            <span v-if="loading.reset">Reseteando...</span>
+            <span v-else>Resetear Configuración Inicial</span>
+          </button>
+        </template>
+        <template v-else-if="isAdmin">
+          <router-link to="/admin-panel" class="admin-button admin-panel-button">
+            <Settings class="button-icon" />
+            <span>Panel Admin</span>
+          </router-link>
+        </template>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import axios from '@/config/axios'
 import { API_ENDPOINTS } from '@/config/api'
 import CountUp from '@/components/ui/CountUp.vue'
@@ -259,10 +289,22 @@ import {
   UserPlus,
   Building,
   FolderPlus,
-  ArrowRight
+  ArrowRight,
+  RotateCcw
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
+const router = useRouter()
+
+// Computed properties para verificar roles
+const isSuperAdmin = computed(() => {
+  return authStore.user?.roles?.includes('SuperAdmin') || false
+})
+
+const isAdmin = computed(() => {
+  return authStore.user?.roles?.includes('Admin') || false
+})
+const { success, error: showError } = useToast()
 
 const stats = ref({
   productos: 0,
@@ -275,14 +317,21 @@ const loading = ref({
   productos: true,
   customers: true,
   sucursales: true,
-  categories: true
+  categories: true,
+  reset: false
 })
 
 const currentDate = ref('')
 const currentTime = ref('')
 
 const userName = computed(() => {
-  return authStore.user?.name || 'Usuario'
+  const user = authStore.user
+  if (!user) return 'Usuario'
+
+  const firstName = user.name || ''
+  const lastName = user.lastname || ''
+
+  return `${firstName} ${lastName}`.trim() || 'Usuario'
 })
 
 const loadStats = async () => {
@@ -326,6 +375,46 @@ const updateDateTime = () => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// Función para resetear la configuración inicial
+const resetSystemConfiguration = async () => {
+  try {
+    loading.value.reset = true
+    
+    // Confirmar la acción
+    const confirmed = confirm(
+      '¿Estás seguro de que quieres resetear la configuración inicial?\n\n' +
+      'Esto eliminará toda la configuración del sistema y cerrará tu sesión.\n' +
+      'Tendrás que volver a seleccionar el tipo de sistema y configurar todo desde cero.'
+    )
+    
+    if (!confirmed) {
+      loading.value.reset = false
+      return
+    }
+    
+    // Llamar al endpoint de reset
+    const response = await axios.post('/initial-config/reset')
+    
+    if (response.data.success) {
+      success('Configuración reseteada', 'Cerrando sesión y redirigiendo al setup inicial...')
+      
+      // Esperar un momento y luego cerrar sesión
+      setTimeout(() => {
+        authStore.logout()
+        router.push('/initial-setup')
+      }, 2000)
+    } else {
+      throw new Error(response.data.message || 'Error al resetear configuración')
+    }
+    
+  } catch (error: any) {
+    console.error('Error reseteando configuración:', error)
+    showError('Error', error.response?.data?.message || error.message || 'Error al resetear la configuración')
+  } finally {
+    loading.value.reset = false
+  }
 }
 
 onMounted(() => {
@@ -811,5 +900,119 @@ onMounted(() => {
 
 .dark .current-time {
   color: #94a3b8;
+}
+
+/* Admin Section Styles */
+.admin-section {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 1rem;
+  border: 1px solid #f59e0b;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.admin-section .section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.superadmin-button {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: white;
+}
+
+.superadmin-button:hover {
+  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(124, 58, 237, 0.3);
+}
+
+.admin-panel-button {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+}
+
+.admin-panel-button:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+}
+
+.reset-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+.reset-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.reset-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.reset-button .button-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Dark mode for admin section */
+.dark .admin-section {
+  background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+  border-color: #d97706;
+}
+
+.dark .admin-section .section-title {
+  color: #fbbf24;
+}
+
+.dark .reset-button {
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+}
+
+.dark .reset-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7f1d1d 0%, #6b1c1c 100%);
 }
 </style>
