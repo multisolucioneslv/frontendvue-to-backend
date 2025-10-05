@@ -30,3 +30,4 @@ pnpm-debug.log*
 src/config/api.ts
 src/config/api.ts.bak
 src/config/axios.ts
+instrucciones.md
