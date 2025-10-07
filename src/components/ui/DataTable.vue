@@ -16,7 +16,10 @@
               @click="column.sortable ? handleSort(column.key) : null"
             >
               <div class="flex items-center gap-2">
-                <span>{{ column.label }}</span>
+                <!-- Slot personalizado para encabezado si existe -->
+                <slot :name="`header-${column.key}`">
+                  <span>{{ column.label }}</span>
+                </slot>
                 <div v-if="column.sortable" class="flex flex-col">
                   <ArrowUp 
                     class="h-3 w-3 transition-colors"

@@ -1,7 +1,7 @@
 <template>
   <SettingsPage
     title="Configuración de Apariencia"
-    subtitle="Personaliza los colores y temas del sistema"
+    subtitle="Personaliza los temas y colores del sistema con PrimeVue"
     :icon="Palette"
     :show-reset="true"
     :show-save="true"
@@ -9,83 +9,127 @@
     @reset="resetAppearanceSettings"
   >
     <div class="settings-grid">
-      <!-- Configuración de Colores -->
+      <!-- Configuración de Temas PrimeVue -->
       <Card class="settings-card">
         <div class="card-header">
           <div class="header-icon">
             <Palette class="h-6 w-6" />
           </div>
           <div class="header-text">
-            <h3>Configuración de Colores</h3>
-            <p>Personaliza la paleta de colores</p>
+            <h3>Temas PrimeVue</h3>
+            <p>Selecciona un tema predefinido</p>
           </div>
         </div>
         
         <div class="card-content">
           <div class="setting-group">
-            <Label class="setting-label">Esquema de Colores</Label>
-            <div class="color-grid">
-              <div 
-                v-for="color in availableColors" 
-                :key="color.id"
-                class="color-option"
-                :class="{ active: isColorActive(color) }"
-                @click="selectColor(color)"
-              >
-                <div class="color-preview">
-                  <div class="color-primary" :style="{ backgroundColor: color.primary }"></div>
-                  <div class="color-secondary" :style="{ backgroundColor: color.secondary }"></div>
-                </div>
-                <span class="color-name">{{ color.name }}</span>
-                <button 
-                  v-if="color.editable"
-                  @click.stop="openColorEditModal(color)"
-                  class="edit-color-btn"
-                  title="Editar colores"
-                >
-                  <Settings class="h-3 w-3" />
-                </button>
-              </div>
-            </div>
+            <Label class="setting-label">Tema Actual</Label>
+            <Select
+              v-model="selectedTheme"
+              :options="availableThemes"
+              option-label="name"
+              option-value="value"
+              placeholder="Selecciona un tema"
+              class="theme-selector"
+              @change="applyTheme"
+            />
+            <p class="theme-description">{{ currentThemeDescription }}</p>
           </div>
 
-          <!-- Colores Personalizados -->
           <div class="setting-group">
-            <Label class="setting-label">Colores Personalizados</Label>
-            <div class="custom-colors">
-              <div class="custom-color-inputs">
-                <div class="color-input-group">
-                  <Label>Color Primario</Label>
-                  <div class="color-input-wrapper">
-                    <input
-                      type="color"
-                      v-model="customPrimaryColor"
-                      @change="updateCustomPrimaryColor"
-                      class="color-input"
-                    />
-                    <span class="color-value">{{ customPrimaryColor }}</span>
-                  </div>
+            <Label class="setting-label">Modo de Color</Label>
+            <div class="mode-options">
+              <div 
+                v-for="mode in colorModes" 
+                :key="mode.value"
+                class="mode-option"
+                :class="{ active: selectedColorMode === mode.value }"
+                @click="selectColorMode(mode.value)"
+              >
+                <div class="mode-icon">
+                  <component :is="mode.icon" class="h-5 w-5" />
                 </div>
-                <div class="color-input-group">
-                  <Label>Color Secundario</Label>
-                  <div class="color-input-wrapper">
-                    <input
-                      type="color"
-                      v-model="customSecondaryColor"
-                      @change="updateCustomSecondaryColor"
-                      class="color-input"
-                    />
-                    <span class="color-value">{{ customSecondaryColor }}</span>
-                  </div>
-                </div>
+                <span class="mode-name">{{ mode.name }}</span>
               </div>
             </div>
           </div>
         </div>
       </Card>
 
-      <!-- Vista Previa -->
+      <!-- Personalización Avanzada -->
       <Card class="settings-card">
+        <div class="card-header">
+          <div class="header-icon">
+            <Settings class="h-6 w-6" />
+          </div>
+          <div class="header-text">
+            <h3>Personalización Avanzada</h3>
+            <p>Configura colores y estilos personalizados</p>
+          </div>
+        </div>
+        
+        <div class="card-content">
+          <div class="setting-group">
+            <Label class="setting-label">Color Primario</Label>
+            <div class="color-input-group">
+              <input
+                type="color"
+                v-model="customColors.primary"
+                @change="updateCustomColors"
+                class="color-input"
+              />
+              <InputMask
+                v-model="customColors.primary"
+                mask="aaaaaa"
+                placeholder="#000000"
+                class="color-text-input"
+                @change="updateCustomColors"
+              />
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <Label class="setting-label">Color Secundario</Label>
+            <div class="color-input-group">
+              <input
+                type="color"
+                v-model="customColors.secondary"
+                @change="updateCustomColors"
+                class="color-input"
+              />
+              <InputMask
+                v-model="customColors.secondary"
+                mask="aaaaaa"
+                placeholder="#000000"
+                class="color-text-input"
+                @change="updateCustomColors"
+              />
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <Label class="setting-label">Color de Acento</Label>
+            <div class="color-input-group">
+              <input
+                type="color"
+                v-model="customColors.accent"
+                @change="updateCustomColors"
+                class="color-input"
+              />
+              <InputMask
+                v-model="customColors.accent"
+                mask="aaaaaa"
+                placeholder="#000000"
+                class="color-text-input"
+                @change="updateCustomColors"
+              />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <!-- Vista Previa -->
+      <Card class="settings-card preview-card">
         <div class="card-header">
           <div class="header-icon">
             <Eye class="h-6 w-6" />
@@ -98,204 +142,259 @@
         
         <div class="card-content">
           <div class="preview-container">
-            <div class="preview-sidebar" :style="{ backgroundColor: localSettings.primaryColor }">
-              <div class="preview-sidebar-content">
-                <div class="preview-menu-item">Dashboard</div>
-                <div class="preview-menu-item">Productos</div>
-                <div class="preview-menu-item">Clientes</div>
+            <!-- Componentes PrimeVue de ejemplo -->
+            <div class="preview-section">
+              <h4>Componentes PrimeVue</h4>
+              <div class="preview-components">
+                <Select
+                  :options="previewOptions"
+                  placeholder="Selector de ejemplo"
+                  class="preview-select"
+                />
+                <InputMask
+                  mask="(999) 999-9999"
+                  placeholder="(999) 999-9999"
+                  class="preview-input"
+                />
+                <Button label="Botón de ejemplo" class="preview-button" />
               </div>
             </div>
-            <div class="preview-main">
-              <div class="preview-navbar" :style="{ backgroundColor: localSettings.secondaryColor }">
-                <div class="preview-navbar-content">Navbar</div>
-              </div>
-              <div class="preview-content">
-                <div class="preview-card">
-                  <h4>Contenido Principal</h4>
-                  <p>Este es un ejemplo de cómo se verá el contenido con los colores seleccionados.</p>
+
+            <!-- Vista previa del layout -->
+            <div class="preview-section">
+              <h4>Layout Preview</h4>
+              <div class="layout-preview">
+                <div class="preview-sidebar" :style="{ backgroundColor: previewColors.primary }">
+                  <div class="preview-menu">
+                    <div class="preview-menu-item">Dashboard</div>
+                    <div class="preview-menu-item">Productos</div>
+                    <div class="preview-menu-item">Clientes</div>
+                  </div>
+                </div>
+                <div class="preview-main">
+                  <div class="preview-navbar" :style="{ backgroundColor: previewColors.secondary }">
+                    <span>Navbar</span>
+                  </div>
+                  <div class="preview-content">
+                    <div class="preview-card">
+                      <h4>Contenido Principal</h4>
+                      <p>Vista previa del tema aplicado</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </Card>
+
+      <!-- Información del Tema -->
+      <Card class="settings-card">
+        <div class="card-header">
+          <div class="header-icon">
+            <Info class="h-6 w-6" />
+          </div>
+          <div class="header-text">
+            <h3>Información del Tema</h3>
+            <p>Detalles sobre la configuración actual</p>
+          </div>
+        </div>
+        
+        <div class="card-content">
+          <div class="theme-info">
+            <div class="info-item">
+              <span class="info-label">Tema:</span>
+              <span class="info-value">{{ currentThemeName }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Modo:</span>
+              <span class="info-value">{{ selectedColorMode }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Versión PrimeVue:</span>
+              <span class="info-value">4.4.0</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Última actualización:</span>
+              <span class="info-value">{{ lastUpdate }}</span>
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
-
-    <!-- Modal para Editar Color -->
-    <Dialog :open="showColorEditModal" @update:open="showColorEditModal = $event" title="Editar Color Preconfigurado">
-      <div class="color-edit-modal">
-        <div class="modal-content">
-          <div class="input-group">
-            <Label>Color Primario (Sidebar)</Label>
-            <input
-              type="color"
-              v-model="editingPrimaryColor"
-              class="color-input"
-            />
-            <div class="color-preview-text">
-              Color actual: {{ editingPrimaryColor }}
-            </div>
-          </div>
-
-          <div class="input-group">
-            <Label>Color Secundario (Navbar)</Label>
-            <input
-              type="color"
-              v-model="editingSecondaryColor"
-              class="color-input"
-            />
-            <div class="color-preview-text">
-              Color actual: {{ editingSecondaryColor }}
-            </div>
-          </div>
-
-          <div class="color-preview-section">
-            <Label>Vista Previa</Label>
-            <div class="preview-container">
-              <div class="preview-sidebar" :style="{ backgroundColor: editingPrimaryColor }">
-                Sidebar
-              </div>
-              <div class="preview-navbar" :style="{ backgroundColor: editingSecondaryColor }">
-                Navbar
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <Button variant="outline" @click="cancelColorEdit">
-            Cancelar
-          </Button>
-          <Button @click="saveEditedColor">
-            Guardar Cambios
-          </Button>
-        </div>
-      </div>
-    </Dialog>
   </SettingsPage>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useSettings } from '@/composables/useSettings'
 import { useToast } from '@/composables/useToast'
 import SettingsPage from '@/components/ui/SettingsPage.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import Label from '@/components/ui/Label.vue'
-import Dialog from '@/components/ui/Dialog.vue'
-import { Palette, Eye, Settings } from 'lucide-vue-next'
+import { Palette, Eye, Settings, Info, Sun, Moon, Monitor } from 'lucide-vue-next'
 
 const {
   settings,
-  availableColors,
   loadSettings,
   saveSettings,
   updateSetting,
-  updatePredefinedColor,
   applySettings,
   resetSettings
 } = useSettings()
 
 const { success, error } = useToast()
 
-// Estado local
-const localSettings = reactive({
-  primaryColor: '#667eea',
-  secondaryColor: '#764ba2'
+// Estado para temas PrimeVue
+const selectedTheme = ref('default')
+const selectedColorMode = ref('light')
+
+// Temas disponibles de PrimeVue
+const availableThemes = [
+  { name: 'Tema Predeterminado', value: 'default', description: 'Tema por defecto de PrimeVue' },
+  { name: 'Tema Azul', value: 'blue', description: 'Tema con colores azules' },
+  { name: 'Tema Verde', value: 'green', description: 'Tema con colores verdes' },
+  { name: 'Tema Púrpura', value: 'purple', description: 'Tema con colores púrpura' },
+  { name: 'Tema Rojo', value: 'red', description: 'Tema con colores rojos' },
+  { name: 'Tema Naranja', value: 'orange', description: 'Tema con colores naranjas' }
+]
+
+// Modos de color
+const colorModes = [
+  { name: 'Claro', value: 'light', icon: Sun },
+  { name: 'Oscuro', value: 'dark', icon: Moon },
+  { name: 'Automático', value: 'auto', icon: Monitor }
+]
+
+// Colores personalizados
+const customColors = reactive({
+  primary: '#3b82f6',
+  secondary: '#64748b',
+  accent: '#8b5cf6'
 })
 
-// Estado para colores personalizados
-const customPrimaryColor = ref('#667eea')
-const customSecondaryColor = ref('#764ba2')
+// Opciones para vista previa
+const previewOptions = [
+  { label: 'Opción 1', value: '1' },
+  { label: 'Opción 2', value: '2' },
+  { label: 'Opción 3', value: '3' }
+]
 
-// Estado para editar colores preconfigurados
-const editingColorId = ref('')
-const editingPrimaryColor = ref('')
-const editingSecondaryColor = ref('')
-const showColorEditModal = ref(false)
+// Computed properties
+const currentThemeName = computed(() => {
+  const theme = availableThemes.find(t => t.value === selectedTheme.value)
+  return theme ? theme.name : 'Tema Desconocido'
+})
+
+const currentThemeDescription = computed(() => {
+  const theme = availableThemes.find(t => t.value === selectedTheme.value)
+  return theme ? theme.description : ''
+})
+
+const previewColors = computed(() => ({
+  primary: customColors.primary,
+  secondary: customColors.secondary,
+  accent: customColors.accent
+}))
+
+const lastUpdate = computed(() => {
+  return new Date().toLocaleDateString('es-ES')
+})
 
 // Métodos
-const selectColor = (color: any) => {
-  localSettings.primaryColor = color.primary
-  localSettings.secondaryColor = color.secondary
+const applyTheme = () => {
+  // Aplicar tema seleccionado
+  const root = document.documentElement
   
-  // Aplicar colores inmediatamente
-  settings.value.primaryColor = color.primary
-  settings.value.secondaryColor = color.secondary
-  applySettings()
+  // Limpiar clases de tema anteriores
+  root.classList.remove('theme-blue', 'theme-green', 'theme-purple', 'theme-red', 'theme-orange')
   
-  success('Colores', `Esquema cambiado a ${color.name}`)
+  if (selectedTheme.value !== 'default') {
+    root.classList.add(`theme-${selectedTheme.value}`)
+  }
+  
+  // Aplicar modo de color
+  applyColorMode()
+  
+  success('Tema', `Tema ${currentThemeName.value} aplicado exitosamente`)
 }
 
-const isColorActive = (color: any) => {
-  return localSettings.primaryColor === color.primary && 
-         localSettings.secondaryColor === color.secondary
+const selectColorMode = (mode: string) => {
+  selectedColorMode.value = mode
+  applyColorMode()
+  success('Modo', `Modo ${mode} aplicado`)
 }
 
-const openColorEditModal = (color: any) => {
-  if (color.editable) {
-    editingColorId.value = color.id
-    editingPrimaryColor.value = color.primary
-    editingSecondaryColor.value = color.secondary
-    showColorEditModal.value = true
+const applyColorMode = () => {
+  const root = document.documentElement
+  
+  // Remover clases de modo anteriores
+  root.classList.remove('light', 'dark')
+  
+  if (selectedColorMode.value === 'auto') {
+    // Detectar preferencia del sistema
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    root.classList.add(prefersDark ? 'dark' : 'light')
+  } else {
+    root.classList.add(selectedColorMode.value)
   }
 }
 
-const saveEditedColor = () => {
-  if (editingColorId.value) {
-    updatePredefinedColor(editingColorId.value, editingPrimaryColor.value, editingSecondaryColor.value)
-    success('Colores', `Color ${editingColorId.value} actualizado exitosamente`)
-    showColorEditModal.value = false
-    editingColorId.value = ''
-    editingPrimaryColor.value = ''
-    editingSecondaryColor.value = ''
-  }
-}
-
-const cancelColorEdit = () => {
-  showColorEditModal.value = false
-  editingColorId.value = ''
-  editingPrimaryColor.value = ''
-  editingSecondaryColor.value = ''
-}
-
-const updateCustomPrimaryColor = () => {
-  localSettings.primaryColor = customPrimaryColor.value
+const updateCustomColors = () => {
+  // Aplicar colores personalizados como variables CSS
+  const root = document.documentElement
+  root.style.setProperty('--primary-color', customColors.primary)
+  root.style.setProperty('--secondary-color', customColors.secondary)
+  root.style.setProperty('--accent-color', customColors.accent)
   
-  // Aplicar color inmediatamente
-  settings.value.primaryColor = customPrimaryColor.value
-  applySettings()
-}
-
-const updateCustomSecondaryColor = () => {
-  localSettings.secondaryColor = customSecondaryColor.value
-  
-  // Aplicar color inmediatamente
-  settings.value.secondaryColor = customSecondaryColor.value
-  applySettings()
+  // Actualizar configuración
+  updateSetting('customPrimaryColor', customColors.primary)
+  updateSetting('customSecondaryColor', customColors.secondary)
+  updateSetting('customAccentColor', customColors.accent)
 }
 
 const saveAppearanceSettings = () => {
-  updateSetting('primaryColor', localSettings.primaryColor)
-  updateSetting('secondaryColor', localSettings.secondaryColor)
+  // Guardar configuración actual
+  updateSetting('selectedTheme', selectedTheme.value)
+  updateSetting('selectedColorMode', selectedColorMode.value)
+  updateSetting('customColors', { ...customColors })
+  
   saveSettings()
   success('Apariencia', 'Configuración de apariencia guardada exitosamente')
 }
 
 const resetAppearanceSettings = () => {
-  resetSettings()
-  Object.assign(localSettings, settings.value)
-  customPrimaryColor.value = localSettings.primaryColor
-  customSecondaryColor.value = localSettings.secondaryColor
+  // Restablecer a valores por defecto
+  selectedTheme.value = 'default'
+  selectedColorMode.value = 'light'
+  customColors.primary = '#3b82f6'
+  customColors.secondary = '#64748b'
+  customColors.accent = '#8b5cf6'
+  
+  // Aplicar configuración por defecto
+  applyTheme()
+  updateCustomColors()
+  
   success('Apariencia', 'Configuración de apariencia restablecida')
 }
 
 onMounted(() => {
   loadSettings()
-  Object.assign(localSettings, settings.value)
-  customPrimaryColor.value = localSettings.primaryColor
-  customSecondaryColor.value = localSettings.secondaryColor
+  
+  // Cargar configuración guardada
+  selectedTheme.value = settings.value.selectedTheme || 'default'
+  selectedColorMode.value = settings.value.selectedColorMode || 'light'
+  
+  if (settings.value.customColors) {
+    customColors.primary = settings.value.customColors.primary || '#3b82f6'
+    customColors.secondary = settings.value.customColors.secondary || '#64748b'
+    customColors.accent = settings.value.customColors.accent || '#8b5cf6'
+  }
+  
+  // Aplicar configuración al cargar
+  applyTheme()
+  updateCustomColors()
 })
 </script>
 
@@ -313,12 +412,16 @@ onMounted(() => {
   overflow: hidden;
 }
 
+.preview-card {
+  grid-column: 1 / -1;
+}
+
 .card-header {
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color, #3b82f6) 0%, var(--secondary-color, #64748b) 100%);
   color: white;
 }
 
@@ -364,15 +467,27 @@ onMounted(() => {
   font-size: 0.875rem;
 }
 
-/* Color Grid */
-.color-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+.theme-description {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+  font-style: italic;
 }
 
-.color-option {
+/* Theme Selector */
+.theme-selector {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+/* Mode Options */
+.mode-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.mode-option {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -385,70 +500,43 @@ onMounted(() => {
   background: white;
 }
 
-.color-option:hover {
-  border-color: #667eea;
+.mode-option:hover {
+  border-color: var(--primary-color, #3b82f6);
   transform: translateY(-2px);
 }
 
-.color-option.active {
-  border-color: #667eea;
-  background: #f0f4ff;
+.mode-option.active {
+  border-color: var(--primary-color, #3b82f6);
+  background: rgba(59, 130, 246, 0.05);
 }
 
-.color-preview {
-  display: flex;
-  gap: 2px;
+.mode-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #f8fafc;
   border-radius: 8px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
 }
 
-.color-primary,
-.color-secondary {
-  width: 20px;
-  height: 20px;
+.mode-option.active .mode-icon {
+  background: var(--primary-color, #3b82f6);
+  color: white;
 }
 
-.color-name {
+.mode-name {
   font-size: 0.75rem;
   font-weight: 500;
   text-align: center;
 }
 
-.edit-color-btn {
-  padding: 0.25rem;
-  background: #f8fafc;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.edit-color-btn:hover {
-  background: #667eea;
-  color: white;
-}
-
-/* Custom Colors */
-.custom-colors {
-  margin-top: 1rem;
-}
-
-.custom-color-inputs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
+/* Color Input Groups */
 .color-input-group {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.color-input-wrapper {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .color-input {
@@ -459,18 +547,50 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.color-value {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #667eea;
-  font-family: monospace;
+.color-text-input {
+  flex: 1;
 }
 
-/* Preview */
+/* Preview Container */
 .preview-container {
   display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.preview-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.preview-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.preview-components {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-  height: 200px;
+}
+
+.preview-select,
+.preview-input {
+  width: 100%;
+}
+
+.preview-button {
+  align-self: flex-start;
+}
+
+/* Layout Preview */
+.layout-preview {
+  display: flex;
+  gap: 1rem;
+  height: 150px;
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid #e2e8f0;
@@ -485,7 +605,7 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
-.preview-sidebar-content {
+.preview-menu {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -511,9 +631,6 @@ onMounted(() => {
   color: white;
   display: flex;
   align-items: center;
-}
-
-.preview-navbar-content {
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -545,38 +662,35 @@ onMounted(() => {
   line-height: 1.4;
 }
 
-/* Modal */
-.color-edit-modal {
-  padding: 1rem;
-}
-
-.modal-content {
+/* Theme Info */
+.theme-info {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 0.75rem;
 }
 
-.input-group {
+.info-item {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.color-preview-text {
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
   font-size: 0.875rem;
+}
+
+.info-value {
   color: #64748b;
-  margin-top: 0.5rem;
-}
-
-.color-preview-section {
-  margin-top: 1.5rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
+  font-size: 0.875rem;
+  font-family: monospace;
 }
 
 /* Dark mode */
@@ -588,17 +702,26 @@ onMounted(() => {
   color: #f1f5f9;
 }
 
-.dark .color-option {
+.dark .theme-description {
+  color: #94a3b8;
+}
+
+.dark .mode-option {
   background: #1e293b;
   border-color: #334155;
 }
 
-.dark .color-option:hover {
-  border-color: #667eea;
+.dark .mode-icon {
+  background: #334155;
+  color: #94a3b8;
 }
 
-.dark .color-option.active {
-  background: #1e293b;
+.dark .preview-section {
+  border-color: #334155;
+}
+
+.dark .preview-section h4 {
+  color: #f1f5f9;
 }
 
 .dark .preview-content {
@@ -617,7 +740,41 @@ onMounted(() => {
   color: #94a3b8;
 }
 
-.dark .color-preview-text {
+.dark .info-item {
+  border-color: #334155;
+}
+
+.dark .info-label {
+  color: #f1f5f9;
+}
+
+.dark .info-value {
   color: #94a3b8;
+}
+
+/* Theme Classes */
+.theme-blue {
+  --primary-color: #3b82f6;
+  --secondary-color: #1e40af;
+}
+
+.theme-green {
+  --primary-color: #10b981;
+  --secondary-color: #047857;
+}
+
+.theme-purple {
+  --primary-color: #8b5cf6;
+  --secondary-color: #7c3aed;
+}
+
+.theme-red {
+  --primary-color: #ef4444;
+  --secondary-color: #dc2626;
+}
+
+.theme-orange {
+  --primary-color: #f97316;
+  --secondary-color: #ea580c;
 }
 </style>

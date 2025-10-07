@@ -1,13 +1,14 @@
 <template>
-  <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <h2 class="text-2xl font-bold">Productos</h2>
-      <Button @click="showModal = true">
-        <Plus class="mr-2 h-4 w-4" /> Nuevo Producto
-      </Button>
-    </div>
+  <div class="space-y-6">
+    <PageHeader title="Productos" subtitle="Gestiona tu catálogo de productos" :icon="Package">
+      <template #actions>
+        <Button @click="nuevoProducto">
+          <Plus class="mr-2 h-4 w-4" /> Nuevo Producto
+        </Button>
+      </template>
+    </PageHeader>
 
-    <!-- Controles superiores como en la imagen -->
+    <!-- Controles superiores -->
     <div class="flex items-center justify-between mb-4">
       <!-- Selector de entradas por página (izquierda) -->
       <div class="flex items-center gap-2">
@@ -38,38 +39,7 @@
       </div>
     </div>
 
-    <!-- Controles de miniaturas -->
-    <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2 mb-4 thumbnail-controls">
-      <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Miniaturas:</span>
-      <Button 
-        @click="decreaseThumbnailSize" 
-        variant="outline" 
-        size="sm"
-        :disabled="thumbnailSize <= 30"
-        title="Reducir tamaño"
-      >
-        <Minus class="h-3 w-3" />
-      </Button>
-      <span class="text-sm font-mono min-w-[3rem] text-center">{{ thumbnailSize }}px</span>
-      <Button 
-        @click="increaseThumbnailSize" 
-        variant="outline" 
-        size="sm"
-        :disabled="thumbnailSize >= 150"
-        title="Aumentar tamaño"
-      >
-        <Plus class="h-3 w-3" />
-      </Button>
-      <Button 
-        @click="resetThumbnailSize" 
-        variant="outline" 
-        size="sm"
-        title="Tamaño por defecto"
-      >
-        <RotateCcw class="h-3 w-3" />
-      </Button>
-    </div>
-
+    <!-- Tabla de productos -->
     <DataTable 
       :columns="columns" 
       :data="filteredProductos"
@@ -83,76 +53,60 @@
 
       <template #cell-image="{ item }">
         <ProductImage 
+          :src="item.image_url" 
+          :alt="item.name"
           :product-id="item.id"
-          :product-name="item.name"
-          :image-url="item.images && item.images.length > 0 ? item.images[0] : ''"
-          :width="thumbnailSize"
-          :height="thumbnailSize"
-          :show-gallery="true"
-          :all-images="item.images || []"
-          @click.stop
+          class="w-12 h-12"
         />
       </template>
 
-      <template #cell-codigo="{ item }">
-        <div v-if="item.codigo" class="flex items-center gap-2">
-          <span class="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-            {{ item.codigo }}
-          </span>
-          <button 
-            @click="copyToClipboard(item.codigo)"
-            class="text-blue-600 hover:text-blue-800 text-xs"
-            title="Copiar código"
-          >
-            📋
-          </button>
+      <template #cell-name="{ item }">
+        <div>
+          <div class="font-medium">{{ item.name }}</div>
+          <div class="text-sm text-muted-foreground">{{ item.code }}</div>
         </div>
-        <span v-else class="text-gray-400 text-sm">Sin código</span>
-      </template>
-
-      <template #cell-qr="{ item }">
-        <div v-if="item.qr" class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[150px]">
-            {{ item.qr }}
-          </span>
-          <button 
-            @click="copyToClipboard(item.qr)"
-            class="text-blue-600 hover:text-blue-800 text-xs"
-            title="Copiar QR"
-          >
-            📋
-          </button>
-        </div>
-        <span v-else class="text-gray-400 text-sm">Sin QR</span>
       </template>
 
       <template #cell-price="{ item }">
-        <span class="font-semibold text-green-600">${{ item.price }}</span>
+        <span class="font-semibold text-green-600 dark:text-green-400">
+          ${{ Number(item.price).toFixed(2) }}
+        </span>
       </template>
 
       <template #cell-stock="{ item }">
-        <span :class="[
-          'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
-          item.stock > 10 ? 'bg-green-100 text-green-800' :
-          item.stock > 0 ? 'bg-yellow-100 text-yellow-800' :
-          'bg-red-100 text-red-800'
-        ]">
-          {{ item.stock }} unidades
+        <span :class="item.stock <= 5 ? 'text-red-600 font-semibold' : 'text-gray-600'">
+          {{ item.stock }}
+        </span>
+      </template>
+
+      <template #cell-category="{ item }">
+        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+          {{ item.category?.name || 'Sin categoría' }}
+        </span>
+      </template>
+
+      <template #cell-status="{ item }">
+        <span :class="item.status === 'active' ? 'text-green-600' : 'text-red-600'">
+          {{ item.status === 'active' ? 'Activo' : 'Inactivo' }}
         </span>
       </template>
 
       <template #actions="{ item }">
-        <div class="flex gap-2">
-          <Button variant="outline" size="sm" @click="editProducto(item)">
+        <div class="flex items-center space-x-2">
+          <Button variant="outline" size="sm" @click="editarProducto(item)" title="Editar">
             <Edit class="h-4 w-4" />
           </Button>
-          <Button variant="destructive" size="sm" @click="deleteProducto(item.id)">
+          <Button variant="outline" size="sm" @click="verProducto(item)" title="Ver">
+            <Eye class="h-4 w-4" />
+          </Button>
+          <Button variant="destructive" size="sm" @click="eliminarProducto(item)" title="Eliminar">
             <Trash2 class="h-4 w-4" />
           </Button>
         </div>
       </template>
     </DataTable>
 
+    <!-- Paginación -->
     <Pagination
       v-if="pagination.total > 0"
       :current-page="pagination.current_page"
@@ -162,819 +116,158 @@
       :to="pagination.to"
       @change="handlePageChange"
     />
-
-    <Dialog :open="showModal" @update:open="showModal = $event" :title="editingProducto ? 'Editar Producto' : 'Nuevo Producto'" class="modal-producto">
-      <div class="modal-content">
-        <form @submit.prevent="saveProducto" class="product-form">
-          <!-- Información Básica -->
-          <div class="form-section">
-            <h3 class="section-title">Información Básica</h3>
-            
-            <!-- Primera fila: Nombre, Código, QR -->
-            <div class="form-row">
-              <div class="form-group">
-                <Label for="name">Nombre del Producto</Label>
-                <Input 
-                  id="name"
-                  v-model="form.name" 
-                  placeholder="Ej: Laptop Gaming Pro"
-                  required 
-                  class="form-input"
-                />
-              </div>
-              
-              <div class="form-group">
-                <Label for="codigo">Código de Barras</Label>
-                <Input 
-                  id="codigo"
-                  v-model="form.codigo" 
-                  placeholder="Ej: 1234567890123"
-                  class="form-input"
-                />
-              </div>
-              
-              <div class="form-group">
-                <Label for="qr">Código QR</Label>
-                <div class="qr-input-group">
-                  <Input 
-                    id="qr"
-                    v-model="form.qr" 
-                    placeholder="Información para código QR"
-                    class="form-input"
-                  />
-                  <Button type="button" variant="outline" size="sm" class="qr-button">
-                    Información
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Segunda fila: Precio y Stock -->
-            <div class="form-row">
-              <div class="form-group">
-                <Label for="price">Precio</Label>
-                <Input 
-                  id="price"
-                  v-model.number="form.price" 
-                  type="number" 
-                  step="0.01"
-                  placeholder="0.00"
-                  required 
-                  class="form-input"
-                />
-              </div>
-              
-              <div class="form-group">
-                <Label for="stock">Stock</Label>
-                <Input 
-                  id="stock"
-                  v-model.number="form.stock" 
-                  type="number" 
-                  placeholder="0"
-                  required 
-                  class="form-input"
-                />
-              </div>
-            </div>
-            
-            <!-- Descripción -->
-            <div class="form-group full-width">
-              <Label for="description">Descripción</Label>
-              <textarea
-                id="description"
-                v-model="form.description"
-                rows="4"
-                placeholder="Describe las características principales del producto..."
-                class="form-textarea"
-                required
-              />
-            </div>
-          </div>
-
-          <!-- Galería de Imágenes -->
-          <div class="form-section">
-            <div class="section-header">
-              <h3 class="section-title">Galería de Imágenes</h3>
-              <div v-if="editingProducto && form.images.length > 0 && selectedFiles.length === 0" class="existing-images-info">
-                <span class="text-sm text-blue-600">📷 Imágenes existentes: {{ form.images.length }}</span>
-              </div>
-            </div>
-            
-            <FileUpload 
-              :max-files="10"
-              :max-file-size="5"
-              @files-change="handleFilesChange"
-            />
-            
-            <div v-if="form.images.length === 0 && selectedFiles.length === 0" class="empty-gallery-message">
-              <p class="text-sm text-muted-foreground">
-                Selecciona imágenes desde tu computadora para crear la galería del producto
-              </p>
-            </div>
-            
-            <div v-else-if="editingProducto && form.images.length > 0 && selectedFiles.length === 0" class="existing-images-message">
-              <p class="text-sm text-blue-600">
-                💡 Selecciona nuevas imágenes para reemplazar las existentes, o mantén las actuales
-              </p>
-            </div>
-          </div>
-
-          <!-- Botones de Acción -->
-          <div class="form-actions">
-            <Button type="button" variant="outline" @click="closeModal">
-              Cancelar
-            </Button>
-            <Button type="submit" :disabled="selectedFiles.length === 0 && form.images.length === 0">
-              {{ editingProducto ? 'Actualizar Producto' : 'Crear Producto' }}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from '@/config/axios';
-import { API_ENDPOINTS } from '@/config/api';
 import DataTable from '@/components/ui/DataTable.vue';
-import Dialog from '@/components/ui/Dialog.vue';
 import Button from '@/components/ui/Button.vue';
 import Input from '@/components/ui/Input.vue';
-import Label from '@/components/ui/Label.vue';
-import Pagination from '@/components/ui/Pagination.vue';
+import PageHeader from '@/components/ui/PageHeader.vue';
 import ProductImage from '@/components/ui/ProductImage.vue';
-import FileUpload from '@/components/ui/FileUpload.vue';
-import { Plus, Search, Edit, Trash2, Minus, RotateCcw } from 'lucide-vue-next';
-import { imageService } from '@/services/imageService';
+import Pagination from '@/components/ui/Pagination.vue';
+import { Plus, Search, Edit, Trash2, Eye, Package } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
 
-interface Producto {
-  id?: number;
-  name: string;
-  codigo?: string;
-  qr?: string;
-  description: string;
-  price: number;
-  stock: number;
-  images: string[]; // Cambiado de 'image' a 'images' array
-}
+const { success, error: showError } = useToast();
+const router = useRouter();
 
-const productos = ref<Producto[]>([]);
-const showModal = ref(false);
-const editingProducto = ref<Producto | null>(null);
+// Estado
+const productos = ref([]);
 const searchQuery = ref('');
-const thumbnailSize = ref(50); // Tamaño dinámico de miniaturas
-const selectedFiles = ref<File[]>([]);
-
-// Variables para ordenamiento y paginación
+const perPage = ref('10');
 const sortBy = ref('name');
 const sortOrder = ref('asc');
-const perPage = ref('10');
 
+// Paginación
 const pagination = ref({
   current_page: 1,
   last_page: 1,
   total: 0,
-  per_page: 10,
   from: 0,
   to: 0
 });
 
-const columns = [
-  { key: 'name', label: 'Nombre', sortable: true },
-  { key: 'codigo', label: 'Código', sortable: true },
-  { key: 'description', label: 'Descripción', sortable: false },
+// Columnas de la tabla
+const columns = ref([
+  { key: 'image', label: 'Imagen', sortable: false },
+  { key: 'name', label: 'Producto', sortable: true },
   { key: 'price', label: 'Precio', sortable: true },
   { key: 'stock', label: 'Stock', sortable: true },
-  { key: 'image', label: 'Imagen', sortable: false },
-];
+  { key: 'category', label: 'Categoría', sortable: true },
+  { key: 'status', label: 'Estado', sortable: true }
+]);
 
-const form = ref<Producto>({
-  name: '',
-  codigo: '',
-  qr: '',
-  description: '',
-  price: 0,
-  stock: 0,
-  images: []
+// Computed
+const sortOrderComputed = computed(() => {
+  return sortOrder.value as 'asc' | 'desc';
 });
-
-const loadProductos = async (page = 1) => {
-  try {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      sort_by: sortBy.value,
-      sort_order: sortOrder.value,
-      per_page: perPage.value
-    });
-    
-    const response = await axios.get(`${API_ENDPOINTS.PRODUCTOS}?${params}`);
-
-    if (response.data.pagination) {
-      productos.value = response.data.data.data || response.data.data;
-      pagination.value = {
-        current_page: response.data.pagination.current_page,
-        last_page: response.data.pagination.last_page,
-        total: response.data.pagination.total,
-        per_page: response.data.pagination.per_page,
-        from: response.data.pagination.from || 0,
-        to: response.data.pagination.to || 0
-      };
-    } else {
-      productos.value = response.data.data || response.data;
-    }
-  } catch (error) {
-    console.error('Error loading productos:', error);
-  }
-};
-
-const sortOrderComputed = computed(() => sortOrder.value as 'asc' | 'desc');
 
 const filteredProductos = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return productos.value;
+  // Asegurar que siempre tenemos un array iterable
+  const productosArray = Array.isArray(productos.value) ? productos.value : [];
+  let filtered = [...productosArray];
+  
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(producto => 
+      producto?.name?.toLowerCase().includes(query) ||
+      producto?.code?.toLowerCase().includes(query) ||
+      producto?.description?.toLowerCase().includes(query)
+    );
   }
-
-  const query = searchQuery.value.toLowerCase();
-  return productos.value.filter(producto => {
-    const name = producto.name.toLowerCase();
-    const description = producto.description?.toLowerCase() || '';
-
-    return name.includes(query) || description.includes(query);
-  });
+  
+  return filtered;
 });
 
+// Métodos
+const cargarProductos = async () => {
+  try {
+    const params: any = {
+      per_page: perPage.value === 'all' ? 1000 : perPage.value,
+      page: pagination.value.current_page,
+      sort_by: sortBy.value,
+      sort_direction: sortOrder.value
+    };
+    
+    if (searchQuery.value) {
+      params.search = searchQuery.value;
+    }
+    
+    const response = await axios.get('/productos', { params });
+    productos.value = response.data.data;
+    
+    // Actualizar paginación
+    pagination.value = {
+      current_page: response.data.current_page,
+      last_page: response.data.last_page,
+      total: response.data.total,
+      from: response.data.from,
+      to: response.data.to
+    };
+  } catch (err) {
+    console.error('Error al cargar productos:', err);
+    showError('Error', 'No se pudieron cargar los productos');
+  }
+};
+
+const nuevoProducto = () => {
+  router.push('/app/productos/create');
+};
+
+const editarProducto = (producto: any) => {
+  router.push(`/app/productos/${producto.id}/edit`);
+};
+
+const verProducto = (producto: any) => {
+  router.push(`/app/productos/${producto.id}`);
+};
+
+const eliminarProducto = async (producto: any) => {
+  if (!confirm(`¿Estás seguro de que quieres eliminar el producto "${producto.name}"?`)) {
+    return;
+  }
+  
+  try {
+    await axios.delete(`/productos/${producto.id}`);
+    success('Éxito', 'Producto eliminado correctamente');
+    cargarProductos();
+  } catch (err) {
+    console.error('Error al eliminar producto:', err);
+    showError('Error', 'No se pudo eliminar el producto');
+  }
+};
+
 const handleSearch = () => {
-  // La búsqueda se realiza automáticamente mediante el computed
-};
-
-const handlePageChange = (page: number) => {
-  loadProductos(page);
-};
-
-// Funciones para ordenamiento
-const handleSortChange = (key: string, order: 'asc' | 'desc') => {
-  sortBy.value = key;
-  sortOrder.value = order;
-  loadProductos(1);
+  pagination.value.current_page = 1;
+  cargarProductos();
 };
 
 const handlePerPageChange = () => {
-  loadProductos(1);
+  pagination.value.current_page = 1;
+  cargarProductos();
 };
 
-const copyToClipboard = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text);
-    // Aquí podrías agregar una notificación de éxito
-    console.log('Copiado al portapapeles:', text);
-  } catch (err) {
-    console.error('Error al copiar:', err);
-  }
+const handlePageChange = (page: number) => {
+  pagination.value.current_page = page;
+  cargarProductos();
 };
 
-const editProducto = (producto: Producto) => {
-  editingProducto.value = producto;
-  form.value = {
-    id: producto.id,
-    name: producto.name,
-    codigo: producto.codigo || '',
-    qr: producto.qr || '',
-    description: producto.description,
-    price: producto.price,
-    stock: producto.stock,
-    images: producto.images ? [...producto.images] : []
-  };
-  // Limpiar archivos seleccionados al editar
-  selectedFiles.value = [];
-  showModal.value = true;
+const handleSortChange = (key: string, order: 'asc' | 'desc') => {
+  sortBy.value = key;
+  sortOrder.value = order;
+  cargarProductos();
 };
 
-const saveProducto = async () => {
-  try {
-    let imagesToSave = form.value.images;
-    
-    // Si hay archivos nuevos seleccionados, convertir a base64
-    if (selectedFiles.value.length > 0) {
-      console.log('Convirtiendo archivos a base64...', selectedFiles.value.length, 'archivos');
-      imagesToSave = await convertFilesToBase64(selectedFiles.value);
-      console.log('Imágenes convertidas:', imagesToSave.length);
-    } else if (editingProducto.value?.id && form.value.images.length > 0) {
-      // Si estamos editando y no hay archivos nuevos, mantener las imágenes existentes
-      console.log('Manteniendo imágenes existentes:', form.value.images.length);
-      imagesToSave = form.value.images;
-    }
-    
-    const productData = {
-      ...form.value,
-      images: imagesToSave
-    };
-    
-    console.log('Datos a enviar:', {
-      id: editingProducto.value?.id,
-      name: productData.name,
-      imagesCount: productData.images?.length || 0,
-      images: productData.images
-    });
-    
-    if (editingProducto.value?.id) {
-      console.log('Actualizando producto...');
-      const response = await axios.put(`${API_ENDPOINTS.PRODUCTOS}/${editingProducto.value.id}`, productData);
-      console.log('Respuesta del servidor:', response.data);
-    } else {
-      console.log('Creando producto...');
-      const response = await axios.post(API_ENDPOINTS.PRODUCTOS, productData);
-      console.log('Respuesta del servidor:', response.data);
-    }
-    closeModal();
-    loadProductos();
-  } catch (error) {
-    console.error('Error saving producto:', error);
-    console.error('Detalles del error:', (error as { response?: { data?: unknown } }).response?.data);
-  }
-};
-
-const deleteProducto = async (id: number) => {
-  if (confirm('¿Estás seguro de eliminar este producto?')) {
-    try {
-      await axios.delete(`${API_ENDPOINTS.PRODUCTOS}/${id}`);
-      loadProductos();
-    } catch (error) {
-      console.error('Error deleting producto:', error);
-    }
-  }
-};
-
-const generateRandomImages = () => {
-  const numberOfImages = Math.floor(Math.random() * 4) + 2; // Entre 2 y 5 imágenes
-  const newImages = [];
-  
-  for (let i = 0; i < numberOfImages; i++) {
-    const randomImageUrl = imageService.getRandomProductImage({
-      width: 400,
-      height: 400,
-      category: 'product'
-    });
-    newImages.push(randomImageUrl);
-  }
-  
-  form.value.images = newImages;
-};
-
-const addImageUrl = () => {
-  if (form.value.images.length < 10) { // Máximo 10 imágenes
-    form.value.images.push('');
-  }
-};
-
-const removeImage = (index: number) => {
-  form.value.images.splice(index, 1);
-};
-
-const updateImageUrl = (index: number, url: string) => {
-  form.value.images[index] = url;
-};
-
-// Funciones para manejar archivos
-const handleFilesChange = (files: File[]) => {
-  selectedFiles.value = files;
-  // Si hay archivos nuevos, reemplazar las imágenes existentes
-  if (files.length > 0) {
-    form.value.images = files.map(file => URL.createObjectURL(file));
-  }
-};
-
-const convertFilesToBase64 = async (files: File[]): Promise<string[]> => {
-  const base64Images: string[] = [];
-  
-  for (const file of files) {
-    const base64 = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
-    });
-    base64Images.push(base64);
-  }
-  
-  return base64Images;
-};
-
-// Funciones para cambiar el tamaño de miniaturas
-const increaseThumbnailSize = () => {
-  if (thumbnailSize.value < 150) {
-    thumbnailSize.value += 10;
-  }
-};
-
-const decreaseThumbnailSize = () => {
-  if (thumbnailSize.value > 30) {
-    thumbnailSize.value -= 10;
-  }
-};
-
-const resetThumbnailSize = () => {
-  thumbnailSize.value = 50;
-};
-
-const setThumbnailSize = (size: number) => {
-  if (size >= 30 && size <= 150) {
-    thumbnailSize.value = size;
-  }
-};
-
-const closeModal = () => {
-  showModal.value = false;
-  editingProducto.value = null;
-  selectedFiles.value = [];
-  form.value = {
-    name: '',
-    codigo: '',
-    qr: '',
-    description: '',
-    price: 0,
-    stock: 0,
-    images: []
-  };
-};
-
+// Lifecycle
 onMounted(() => {
-  loadProductos();
+  cargarProductos();
 });
 </script>
 
 <style scoped>
-/* Estilos para la tabla de productos */
-:deep(.data-table) {
-  width: 100%;
-}
-
-:deep(.data-table th:nth-child(5)),
-:deep(.data-table td:nth-child(5)) {
-  width: calc(v-bind(thumbnailSize) + 20px);
-  min-width: calc(v-bind(thumbnailSize) + 20px);
-  max-width: calc(v-bind(thumbnailSize) + 20px);
-}
-
-:deep(.product-image-container) {
-  max-width: v-bind(thumbnailSize + 'px');
-  max-height: v-bind(thumbnailSize + 'px');
-}
-
-:deep(.product-image) {
-  max-width: v-bind(thumbnailSize + 'px');
-  max-height: v-bind(thumbnailSize + 'px');
-  width: v-bind(thumbnailSize + 'px');
-  height: v-bind(thumbnailSize + 'px');
-  object-fit: cover;
-}
-
-:deep(.image-wrapper) {
-  max-width: v-bind(thumbnailSize + 'px');
-  max-height: v-bind(thumbnailSize + 'px');
-  width: v-bind(thumbnailSize + 'px');
-  height: v-bind(thumbnailSize + 'px');
-}
-
-/* Estilos para los controles de tamaño */
-.thumbnail-controls {
-  transition: all 0.2s ease;
-}
-
-.thumbnail-controls:hover {
-  background-color: var(--gray-200);
-}
-
-.dark .thumbnail-controls:hover {
-  background-color: var(--gray-700);
-}
-
-/* Estilos para el modal de producto - FORZAR APLICACIÓN */
-:deep(.modal-producto) {
-  width: 60vw !important;
-  max-width: 1200px !important;
-  height: 50vh !important;
-  max-height: 600px !important;
-  margin: 0 !important;
-  position: relative !important;
-  z-index: 50 !important;
-}
-
-/* Forzar estilos en el contenedor del modal */
-:deep(.modal-producto .relative) {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-}
-
-/* Forzar estilos en el contenido del modal */
-:deep(.modal-producto .grid) {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-}
-
-.modal-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  padding: 0;
-}
-
-.dark .modal-content {
-  background: #1a1a1a;
-}
-
-.product-form {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
-  overflow-y: auto;
-  gap: 1.5rem;
-}
-
-.form-section {
-  margin-bottom: 1.5rem;
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-}
-
-.dark .form-section {
-  background: #2d2d2d;
-  border-color: #404040;
-}
-
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #3b82f6;
-}
-
-.dark .section-title {
-  color: #f9fafb;
-  border-bottom-color: #60a5fa;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-group.full-width {
-  grid-column: 1 / -1;
-}
-
-/* Nuevos estilos para el layout mejorado */
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.form-row:last-child {
-  margin-bottom: 0;
-}
-
-.qr-input-group {
-  display: flex;
-  gap: 8px;
-  align-items: end;
-}
-
-.qr-input-group .form-input {
-  flex: 1;
-}
-
-.qr-button {
-  white-space: nowrap;
-  min-width: 100px;
-}
-
-.form-input,
-.form-textarea {
-  padding: 0.75rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.section-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.images-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 0.75rem;
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 0.75rem;
-  border: 2px dashed #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
-}
-
-.dark .images-gallery {
-  border-color: #374151;
-  background: #111827;
-}
-
-.image-item {
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  transition: all 0.2s ease;
-}
-
-.dark .image-item {
-  background: #1f2937;
-  border-color: #374151;
-}
-
-.image-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.dark .image-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.image-input-group {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.image-url-input {
-  flex: 1;
-}
-
-.remove-btn {
-  flex-shrink: 0;
-}
-
-.image-preview {
-  text-align: center;
-}
-
-.preview-image {
-  max-width: 100%;
-  max-height: 150px;
-  border-radius: 6px;
-  object-fit: cover;
-  border: 1px solid #e5e7eb;
-}
-
-.empty-gallery-message {
-  text-align: center;
-  padding: 1rem;
-  background: #f9fafb;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
-.dark .empty-gallery-message {
-  background: #1f2937;
-}
-
-.existing-images-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.existing-images-message {
-  text-align: center;
-  padding: 1rem;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
-.dark .existing-images-message {
-  background: #1e3a8a;
-  border-color: #3b82f6;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-  margin-top: auto;
-}
-
-.dark .form-actions {
-  border-top-color: #374151;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  :deep(.modal-producto) {
-    width: 80vw !important;
-    height: 60vh !important;
-  }
-  
-  .form-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .qr-input-group {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .qr-button {
-    min-width: auto;
-  }
-}
-
-@media (max-width: 768px) {
-  :deep(.modal-producto) {
-    width: 95vw !important;
-    height: 70vh !important;
-  }
-  
-  .product-form {
-    padding: 1rem;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-section {
-    padding: 16px;
-  }
-  
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-}
-
-/* Estilos adicionales para forzar el tamaño del modal */
-.modal-producto {
-  width: 60vw !important;
-  max-width: 1200px !important;
-  height: 50vh !important;
-  max-height: 600px !important;
-}
+/* Estilos específicos si son necesarios */
 </style>

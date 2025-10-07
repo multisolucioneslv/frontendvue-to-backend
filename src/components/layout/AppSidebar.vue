@@ -283,6 +283,7 @@ const settingsSubMenuItems = [
   { to: '/app/settings/branding', label: 'Branding', icon: ImageIcon },
   { to: '/app/settings/views', label: 'Vistas', icon: Eye },
   { to: '/app/settings/system-type', label: 'Tipo de Sistema', icon: Server },
+  { to: '/app/settings/tax', label: 'Impuestos', icon: Scale },
 ];
 
 const documentationItem = {

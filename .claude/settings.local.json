@@ -10,7 +10,8 @@
       "Bash(npm run build:*)",
       "Bash(php artisan:*)",
       "Read(//d/ProyectosLaragon/**)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(php:*)"
     ],
     "deny": [],
     "ask": []

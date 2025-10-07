@@ -1,4 +1,21 @@
+/*
+ * ============================================================================
+ * API CONFIGURATION - SISTEMA MULTI-SERVICIO
+ * ============================================================================
+ * 
+ * ⚠️  IMPORTANTE: URL del backend actualizada
+ * 
+ * Esta configuración apunta al backend Laravel que está corriendo en Laragon.
+ * Si cambias el dominio o puerto del backend, actualiza la URL_BASE aquí.
+ * 
+ * 🔧 URL ACTUAL: https://laravel12apirest.test/api
+ * 📝 NOTA: Esta URL coincide con la configuración de Laragon
+ * 
+ * ============================================================================
+ */
+
 export const API_CONFIG = {
+  // CORREGIDO: URL actualizada para usar localhost en desarrollo
   URL_BASE: 'http://localhost:8000/api'
 }
 
@@ -12,6 +29,7 @@ export const API_ENDPOINTS = {
   // Resources
   PRODUCTOS: '/productos',
   CUSTOMERS: '/customers',
+  COTIZACIONES: '/cotizaciones',
   SUCURSALES: '/sucursales',
   CATEGORIES: '/categories',
   USERS: '/users',

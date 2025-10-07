@@ -30,6 +30,9 @@ export const useAuthStore = defineStore('auth', {
           // El backend devuelve los datos del usuario directamente
           this.user = response.data
 
+          // Guardar datos del usuario en localStorage para persistencia
+          localStorage.setItem('userData', JSON.stringify(response.data))
+
           console.log('Usuario cargado:', this.user)
 
           // Cargar sistema del usuario después de cargar el usuario
@@ -105,6 +108,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.isAuthenticated = false
       localStorage.removeItem('token')
+      localStorage.removeItem('userData') // Limpiar también los datos del usuario
       delete axios.defaults.headers.common['Authorization']
 
       // Limpiar sistema al cerrar sesión
@@ -117,9 +121,24 @@ export const useAuthStore = defineStore('auth', {
       if (this.token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
 
-        // Cargar usuario y sistema si no están cargados
+        // Intentar cargar datos del usuario desde localStorage primero
+        const userDataFromStorage = localStorage.getItem('userData')
+        if (userDataFromStorage) {
+          try {
+            this.user = JSON.parse(userDataFromStorage)
+            console.log('Usuario restaurado desde localStorage:', this.user)
+          } catch (error) {
+            console.error('Error parseando datos de usuario desde localStorage:', error)
+            localStorage.removeItem('userData')
+          }
+        }
+
+        // Cargar usuario y sistema si no están cargados o si falló la carga desde localStorage
         if (!this.user) {
           await this.loadUser()
+        } else {
+          // Si ya tenemos datos del usuario, solo cargar el sistema
+          await this.loadUserSystem()
         }
       }
     }

@@ -8,7 +8,7 @@
 import { computed } from 'vue'
 
 interface Props {
-  status: string
+  status?: string
   label?: string
   variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'purple'
 }
@@ -56,7 +56,7 @@ const badgeClasses = computed(() => {
   const baseClasses = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold'
   
   // Determinar la variante basada en el status o usar la variante explícita
-  const statusKey = props.status.toLowerCase()
+  const statusKey = props.status ? props.status.toLowerCase() : ''
   const mappedVariant = statusVariantMap[statusKey] || props.variant
   const variantClass = variantClasses[mappedVariant] || variantClasses.default
   

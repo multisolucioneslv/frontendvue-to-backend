@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Logo de Empresa</title>
+</head>
+<body>
+    <h1>Configurar Logo de Empresa</h1>
+    <p>Este script configura temporalmente el logo de la empresa para probar el sistema.</p>
+    
+    <script>
+        // Configurar el logo de la empresa en localStorage
+        const settings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+        
+        // Configurar el logo de la empresa
+        if (!settings.branding) {
+            settings.branding = {};
+        }
+        
+        settings.branding.logo = '/company-logo.png';
+        settings.branding.companyName = 'Mi Empresa Demo';
+        settings.branding.companySlogan = 'Soluciones Empresariales';
+        
+        // Guardar en localStorage
+        localStorage.setItem('systemSettings', JSON.stringify(settings));
+        
+        console.log('✅ Logo de empresa configurado:', settings.branding);
+        
+        // Mostrar mensaje
+        document.body.innerHTML += '<div style="background: #d4edda; color: #155724; padding: 15px; margin: 20px 0; border: 1px solid #c3e6cb; border-radius: 5px;"><strong>✅ Configuración completada!</strong><br>Logo de empresa configurado como: /company-logo.png<br>Nombre de empresa: Mi Empresa Demo<br><br>Ahora ve al login para ver el logo de la empresa en lugar del logo de Vue.</div>';
+        
+        // Botón para ir al login
+        const button = document.createElement('button');
+        button.textContent = 'Ir al Login';
+        button.style.cssText = 'background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;';
+        button.onclick = () => {
+            window.location.href = '/login';
+        };
+        document.body.appendChild(button);
+    </script>
+</body>
+</html>

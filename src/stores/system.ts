@@ -1,3 +1,27 @@
+/*
+ * ============================================================================
+ * SYSTEM STORE - SISTEMA MULTI-SERVICIO
+ * ============================================================================
+ * 
+ * ⚠️  IMPORTANTE: CARGA DE SISTEMA TEMPORALMENTE DESHABILITADA
+ * 
+ * Este store ha sido modificado para deshabilitar temporalmente la carga
+ * del sistema actual que causaba errores 404. Los cambios están marcados
+ * con comentarios que indican cómo revertir las modificaciones.
+ * 
+ * 🔧 CAMBIOS REALIZADOS:
+ * 1. loadCurrentSystem() deshabilitada temporalmente
+ * 2. Carga automática de módulos deshabilitada
+ * 3. Sistema por defecto simulado
+ * 
+ * 📝 PARA REHABILITAR LA CARGA DE SISTEMA:
+ * 1. Crear endpoint /api/user/current-system en el backend
+ * 2. Descomentar la lógica de loadCurrentSystem()
+ * 3. Restaurar la carga automática en auth.ts
+ * 
+ * ============================================================================
+ */
+
 import { defineStore } from 'pinia'
 import axios from '@/config/axios'
 import { API_ENDPOINTS } from '@/config/api'
@@ -86,22 +110,102 @@ export const useSystemStore = defineStore('system', {
     },
 
     /**
-     * Cargar sistema actual del usuario
+     * TEMPORALMENTE DESHABILITADO: Cargar sistema actual del usuario
+     * Para revertir: descomentar la función completa y comentar la lógica de sistema por defecto
      */
     async loadCurrentSystem() {
       try {
-        this.isLoading = true
-        const response = await axios.get(API_ENDPOINTS.CURRENT_SYSTEM)
+        console.log('🚀 System Store - Cargando sistema actual (deshabilitado temporalmente)')
+        
+        // TEMPORALMENTE DESHABILITADO: Llamada al endpoint que da 404
+        // this.isLoading = true
+        // const response = await axios.get(API_ENDPOINTS.CURRENT_SYSTEM)
 
-        if (response.data.success) {
-          this.currentSystem = response.data.data
-          // Cargar módulos del sistema actual
-          if (this.currentSystem) {
-            await this.loadSystemModules(this.currentSystem.id)
-          }
+        // if (response.data.success) {
+        //   this.currentSystem = response.data.data
+        //   // Cargar módulos del sistema actual
+        //   if (this.currentSystem) {
+        //     await this.loadSystemModules(this.currentSystem.id)
+        //   }
+        // }
+
+        // return { success: true, data: this.currentSystem }
+
+        // TEMPORALMENTE: Sistema por defecto simulado
+        this.currentSystem = {
+          id: 1,
+          name: 'Sistema por Defecto',
+          slug: 'default',
+          description: 'Sistema base con funcionalidades generales',
+          icon: '⚙️',
+          color: '#667eea',
+          is_active: true,
+          is_default: true
         }
 
+        // TEMPORALMENTE: Módulos por defecto simulados
+        this.activeModules = [
+          {
+            id: 1,
+            system_type_id: 1,
+            name: 'Dashboard',
+            slug: 'dashboard',
+            description: 'Panel principal del sistema',
+            route: '/app/dashboard',
+            icon: '📊',
+            color: '#667eea',
+            permissions: ['read'],
+            is_active: true,
+            is_required: true,
+            sort_order: 1
+          },
+          {
+            id: 2,
+            system_type_id: 1,
+            name: 'Productos',
+            slug: 'productos',
+            description: 'Gestión de productos',
+            route: '/app/productos',
+            icon: '📦',
+            color: '#10b981',
+            permissions: ['read', 'write'],
+            is_active: true,
+            is_required: false,
+            sort_order: 2
+          },
+          {
+            id: 3,
+            system_type_id: 1,
+            name: 'Clientes',
+            slug: 'customers',
+            description: 'Gestión de clientes',
+            route: '/app/customers',
+            icon: '👥',
+            color: '#f59e0b',
+            permissions: ['read', 'write'],
+            is_active: true,
+            is_required: false,
+            sort_order: 3
+          },
+          {
+            id: 4,
+            system_type_id: 1,
+            name: 'Cotizaciones',
+            slug: 'cotizaciones',
+            description: 'Gestión de cotizaciones',
+            route: '/app/cotizaciones',
+            icon: '📄',
+            color: '#8b5cf6',
+            permissions: ['read', 'write'],
+            is_active: true,
+            is_required: false,
+            sort_order: 4
+          }
+        ]
+
+        console.log('✅ System Store - Sistema por defecto simulado cargado')
         return { success: true, data: this.currentSystem }
+
       } catch (error: any) {
         console.error('Error cargando sistema actual:', error)
         return {

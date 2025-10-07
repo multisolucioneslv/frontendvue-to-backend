@@ -1,7 +1,39 @@
+/*
+ * ============================================================================
+ * ROUTER CONFIGURATION - SISTEMA MULTI-SERVICIO
+ * ============================================================================
+ * 
+ * ⚠️  IMPORTANTE: SETUP INICIAL TEMPORALMENTE DESHABILITADO
+ * 
+ * Este archivo ha sido modificado para deshabilitar temporalmente el sistema
+ * de configuración inicial. Los cambios están marcados con comentarios
+ * que indican cómo revertir las modificaciones.
+ * 
+ * 🔧 CAMBIOS REALIZADOS:
+ * 1. Ruta principal cambiada de '/initial-setup' a '/login'
+ * 2. Middleware de setup comentado completamente
+ * 3. Meta 'requiresSetupCompleted' removida de rutas /app y /admin-setup
+ * 4. Ruta /initial-setup comentada
+ * 
+ * 📝 PARA REHABILITAR EL SETUP INICIAL:
+ * 1. Buscar comentarios "TEMPORALMENTE DESHABILITADO"
+ * 2. Descomentar las líneas marcadas
+ * 3. Agregar 'requiresSetupCompleted: true' de vuelta a las rutas
+ * 4. Cambiar redirect principal de '/login' a '/initial-setup'
+ * 
+ * 📋 ARCHIVOS RELACIONADOS QUE TAMBIÉN FUERON MODIFICADOS:
+ * - frontendvue/src/views/Login.vue (sección de setup comentada)
+ * - Ver archivo: SETUP_DISABLED_GUIDE.md para documentación completa
+ * 
+ * ============================================================================
+ */
+
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useSetupMiddleware } from '@/middleware/setup'
-import InitialSetupFlow from '../views/admin/setup/InitialSetupFlow.vue'
+// TEMPORALMENTE DESHABILITADO: Middleware de setup inicial
+// import { useSetupMiddleware } from '@/middleware/setup'
+// TEMPORALMENTE DESHABILITADO: Componente de configuración inicial
+// import InitialSetupFlow from '../views/admin/setup/InitialSetupFlow.vue'
 import AdminPanel from '../views/admin/panels/AdminPanel.vue'
 import SuperAdminPanel from '../views/admin/panels/SuperAdminPanel.vue'
 import Login from '../views/Login.vue'
@@ -23,11 +55,14 @@ import BrandingSettings from '../views/settings/BrandingSettings.vue'
 import ViewsSettings from '../views/settings/ViewsSettings.vue'
 import TimezoneSettings from '../views/settings/TimezoneSettings.vue'
 import SystemTypeSettings from '../views/settings/SystemTypeSettings.vue'
+import TaxSettings from '../views/settings/TaxSettings.vue'
 import AdminDashboard from '../views/admin/AdminDashboard.vue'
 import SystemTypes from '../views/admin/SystemTypes.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
+    // ⚠️  MODIFICADO: Cambiado de '/initial-setup' a '/login'
+    // Para revertir: cambiar redirect de '/login' a '/initial-setup'
     path: '/',
     redirect: '/login'
   },
@@ -42,7 +77,8 @@ const routes: Array<RouteRecordRaw> = [
     name: 'clear-sessions',
     redirect: '/clear-sessions.html'
   },
-  // TEMPORALMENTE DESHABILITADO: Ruta de configuración inicial
+  // ⚠️  TEMPORALMENTE DESHABILITADO: Ruta de configuración inicial
+  // Para revertir: descomentar estas líneas y comentar la redirección a /login arriba
   // {
   //   path: '/initial-setup',
   //   name: 'initial-setup',
@@ -50,6 +86,8 @@ const routes: Array<RouteRecordRaw> = [
   //   meta: { requiresSetupNotCompleted: true, requiresSuperAdmin: true }
   // },
   {
+    // ⚠️  MODIFICADO: Removido 'requiresSetupCompleted: true'
+    // Para revertir: cambiar meta de { requiresSuperAdmin: true } a { requiresSetupCompleted: true, requiresSuperAdmin: true }
     path: '/admin-setup',
     name: 'admin-setup',
     component: SuperAdminPanel,
@@ -62,6 +100,8 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
+    // ⚠️  MODIFICADO: Removido 'requiresSetupCompleted: true'
+    // Para revertir: cambiar meta de { requiresAuth: true } a { requiresAuth: true, requiresSetupCompleted: true }
     path: '/app',
     component: AppLayout,
     meta: { requiresAuth: true },
@@ -106,6 +146,18 @@ const routes: Array<RouteRecordRaw> = [
         path: 'cotizaciones',
         name: 'cotizaciones',
         component: Cotizaciones,
+        meta: { viewKey: 'cotizaciones' }
+      },
+      {
+        path: 'cotizaciones/create',
+        name: 'create-cotizacion',
+        component: () => import('../views/CreateCotizacion.vue'),
+        meta: { viewKey: 'cotizaciones' }
+      },
+      {
+        path: 'cotizaciones/:id/edit',
+        name: 'edit-cotizacion',
+        component: () => import('../views/EditCotizacion.vue'),
         meta: { viewKey: 'cotizaciones' }
       },
       {
@@ -160,6 +212,12 @@ const routes: Array<RouteRecordRaw> = [
         path: 'settings/system-type',
         name: 'settings-system-type',
         component: SystemTypeSettings,
+        meta: { viewKey: 'settings' }
+      },
+      {
+        path: 'settings/tax',
+        name: 'settings-tax',
+        component: TaxSettings,
         meta: { viewKey: 'settings' }
       },
       {
@@ -295,16 +353,17 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // TEMPORALMENTE DESHABILITADO: Verificar configuración inicial
+  // ⚠️  TEMPORALMENTE DESHABILITADO: Verificar configuración inicial
+  // Para revertir: descomentar las siguientes líneas y comentar el return next() al final
   // const { requireSetupCompleted, requireSetupNotCompleted } = useSetupMiddleware()
   
-  // TEMPORALMENTE DESHABILITADO: Verificar setup inicial para rutas que lo requieren
+  // ⚠️  TEMPORALMENTE DESHABILITADO: Verificar setup inicial para rutas que lo requieren
   // if (to.meta.requiresSetupCompleted) {
   //   await requireSetupCompleted(to, from, next)
   //   return
   // }
 
-  // TEMPORALMENTE DESHABILITADO: Verificar que el setup NO esté completado para rutas de configuración inicial
+  // ⚠️  TEMPORALMENTE DESHABILITADO: Verificar que el setup NO esté completado para rutas de configuración inicial
   // if (to.meta.requiresSetupNotCompleted) {
   //   await requireSetupNotCompleted(to, from, next)
   //   return

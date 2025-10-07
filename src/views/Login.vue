@@ -1,16 +1,52 @@
+<!--
+ * ============================================================================
+ * LOGIN COMPONENT - SISTEMA MULTI-SERVICIO
+ * ============================================================================
+ * 
+ * ⚠️  IMPORTANTE: SETUP INICIAL TEMPORALMENTE DESHABILITADO
+ * 
+ * Este componente ha sido modificado para deshabilitar temporalmente el sistema
+ * de configuración inicial. Los cambios están marcados con comentarios
+ * que indican cómo revertir las modificaciones.
+ * 
+ * 🔧 CAMBIOS REALIZADOS:
+ * 1. Sección de "Configuración Inicial Requerida" comentada completamente
+ * 2. Import de useInitialSetup comentado
+ * 3. Función isSetupCompleted comentada
+ * 4. Función goToSetup comentada
+ * 5. onMounted que verificaba setup comentado
+ * 6. Estilos de configuración inicial comentados
+ * 7. Export statements removidos (no compatibles con <script setup>)
+ * 8. CORREGIDO: Parámetros de login para que coincidan con el store
+ * 
+ * 📝 PARA REHABILITAR EL SETUP INICIAL:
+ * 1. Buscar comentarios "TEMPORALMENTE DESHABILITADO"
+ * 2. Descomentar las secciones marcadas
+ * 3. Restaurar la lógica condicional v-if="isSetupCompleted"
+ * 4. Importar useInitialSetup de nuevo
+ * 5. Restaurar export statements si es necesario
+ * 
+ * 📋 ARCHIVOS RELACIONADOS QUE TAMBIÉN FUERON MODIFICADOS:
+ * - frontendvue/src/router/index.ts (middleware y rutas de setup)
+ * - Ver archivo: SETUP_DISABLED_GUIDE.md para documentación completa
+ * 
+ * ============================================================================
+ -->
+
 <template>
   <div class="login-container" :style="containerStyle">
-    <div class="login-card" :class="{ 'minimal-card': loginTemplate === 'minimal' }">
+    <div class="login-card">
+      <!-- Header -->
       <div class="login-header">
-        <div v-if="logo" class="login-logo">
-          <img :src="logo" alt="Logo" />
+        <div class="logo-section">
+          <img :src="logoUrl" alt="Logo" class="logo" />
+          <h1 class="app-title">{{ appName }}</h1>
         </div>
-        <h1>Bienvenido</h1>
-        <p>Inicia sesión en tu cuenta</p>
       </div>
 
-      <!-- Botón de Configuración Inicial -->
-      <div v-if="!isSetupCompleted" class="setup-section">
+      <!-- TEMPORALMENTE DESHABILITADO: Configuración Inicial -->
+      <!-- Para revertir: descomentar esta sección completa y restaurar la lógica v-if="!isSetupCompleted" -->
+      <!-- <div v-if="!isSetupCompleted" class="setup-section">
         <div class="setup-message">
           <div class="setup-icon">
             <Settings class="h-8 w-8 text-blue-600" />
@@ -29,652 +65,713 @@
         <div class="setup-note">
           <p>Una vez configurado, podrás iniciar sesión normalmente.</p>
         </div>
-      </div>
+      </div> -->
 
-      <!-- Formulario de Login (solo si está configurado) -->
-      <div v-if="isSetupCompleted">
+      <!-- Formulario de Login (siempre visible temporalmente) -->
+      <!-- MODIFICADO: Removido v-if="isSetupCompleted" -->
+      <!-- Para revertir: cambiar <div> por <div v-if="isSetupCompleted"> -->
+      <div>
         <div class="login-options">
           <button
             :class="['option-btn', { active: loginType === 'username' }]"
             @click="loginType = 'username'"
           >
+            <User class="h-4 w-4 mr-2" />
             Usuario
           </button>
           <button
             :class="['option-btn', { active: loginType === 'email' }]"
             @click="loginType = 'email'"
           >
-            Correo
+            <Mail class="h-4 w-4 mr-2" />
+            Email
           </button>
         </div>
 
         <form @submit.prevent="handleLogin" class="login-form">
           <div class="form-group">
-            <label :for="loginType">
-              {{ loginType === 'username' ? 'Usuario' : 'Correo Electrónico' }}
+            <label :for="loginType" class="form-label">
+              {{ loginType === 'username' ? 'Usuario' : 'Email' }}
             </label>
             <div class="input-wrapper">
-              <i :class="loginType === 'username' ? 'icon-user' : 'icon-email'"></i>
+              <component
+                :is="loginType === 'username' ? User : Mail"
+                class="input-icon"
+              />
               <input
                 :id="loginType"
                 v-model="credentials.identifier"
                 :type="loginType === 'email' ? 'email' : 'text'"
-                :placeholder="loginType === 'username' ? 'Ingresa tu usuario' : 'Ingresa tu correo'"
+                :placeholder="loginType === 'username' ? 'Ingresa tu usuario' : 'Ingresa tu email'"
+                class="form-input"
                 required
+                :disabled="isLoading"
               />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="password">Contraseña</label>
+            <label for="password" class="form-label">Contraseña</label>
             <div class="input-wrapper">
-              <i class="icon-lock"></i>
+              <Lock class="input-icon" />
               <input
                 id="password"
                 v-model="credentials.password"
-                :type="showPassword ? 'text' : 'password'"
+                type="password"
                 placeholder="Ingresa tu contraseña"
+                class="form-input"
                 required
+                :disabled="isLoading"
               />
-              <button
-                type="button"
-                class="toggle-password"
-                @click="showPassword = !showPassword"
-              >
-                <i :class="showPassword ? 'icon-eye-off' : 'icon-eye'"></i>
-              </button>
             </div>
           </div>
 
-          <div class="form-options">
-            <label class="remember-me">
-              <input type="checkbox" v-model="rememberMe" />
-              <span>Recordarme</span>
-            </label>
-            <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-          </div>
-
           <div v-if="errorMessage" class="error-message">
+            <AlertCircle class="h-4 w-4 mr-2" />
             {{ errorMessage }}
           </div>
 
-          <button type="submit" class="login-btn" :disabled="isLoading">
+          <button
+            type="submit"
+            class="login-btn"
+            :disabled="isLoading"
+          >
+            <Loader2 v-if="isLoading" class="h-4 w-4 mr-2 animate-spin" />
+            <LogIn v-else class="h-4 w-4 mr-2" />
             {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
           </button>
         </form>
 
-        <div v-if="showRegister" class="signup-link">
-          ¿No tienes cuenta? <a href="#">Regístrate</a>
+        <!-- Enlace de registro (si está habilitado) -->
+        <div v-if="showRegister" class="register-section">
+          <p class="register-text">
+            ¿No tienes una cuenta?
+            <a href="#" class="register-link" @click.prevent="showRegisterModal = true">
+              Regístrate aquí
+            </a>
+          </p>
+        </div>
+
+        <!-- Enlaces adicionales -->
+        <div class="additional-links">
+          <a href="#" class="link">¿Olvidaste tu contraseña?</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de registro -->
+    <div v-if="showRegisterModal" class="modal-overlay" @click="showRegisterModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Registro de Usuario</h3>
+          <button @click="showRegisterModal = false" class="modal-close">
+            <X class="h-4 w-4" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>El registro de nuevos usuarios debe ser realizado por un administrador del sistema.</p>
+          <p>Contacta al administrador para obtener acceso.</p>
+        </div>
+        <div class="modal-footer">
+          <button @click="showRegisterModal = false" class="btn-secondary">
+            Entendido
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
-import { useAuthStore } from '@/stores/auth';
-import { useRouter } from 'vue-router';
-import { useSettings } from '@/composables/useSettings';
-import { useInitialSetup } from '@/composables/useInitialSetup';
-import { ADMIN_CONFIG } from '@/config/admin';
-import { Settings } from 'lucide-vue-next';
+<script setup lang="ts">
+/*
+ * ============================================================================
+ * LOGIN COMPONENT SCRIPT - SETUP INICIAL DESHABILITADO
+ * ============================================================================
+ * 
+ * IMPORTANTE: Este script ha sido modificado para deshabilitar temporalmente
+ * el sistema de configuración inicial. Buscar comentarios "TEMPORALMENTE DESHABILITADO"
+ * para identificar las modificaciones.
+ * 
+ * NOTA: En <script setup> no se pueden usar export statements.
+ * Todas las variables y funciones declaradas están automáticamente disponibles.
+ * 
+ * CORREGIDO: Los parámetros de login ahora coinciden con lo que espera el store.
+ * 
+ * ============================================================================
+ */
 
-export default defineComponent({
-  name: 'LoginView',
-  components: {
-    Settings
-  },
-  setup() {
-    console.log('🔥 LOGIN COMPONENT SETUP STARTED')
-    
-    const authStore = useAuthStore();
-    const router = useRouter();
-    const { settings, loadSettings } = useSettings();
-    const { isInitialSetupCompleted, checkSetupStatus } = useInitialSetup();
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useSettings } from '@/composables/useSettings'
+// TEMPORALMENTE DESHABILITADO: useInitialSetup
+// Para revertir: descomentar la siguiente línea
+// import { useInitialSetup } from '@/composables/useInitialSetup'
+import { 
+  User, 
+  Mail, 
+  Lock, 
+  LogIn, 
+  Loader2, 
+  AlertCircle, 
+  Settings,
+  X
+} from 'lucide-vue-next'
+// CORREGIDO: Logo configurado para usar archivo en public
 
-    const loginType = ref<'username' | 'email'>('username');
-    const showPassword = ref(false);
-    const rememberMe = ref(false);
-    const isLoading = ref(false);
-    const errorMessage = ref('');
+const router = useRouter()
+const authStore = useAuthStore()
+const { settings } = useSettings()
 
-    const credentials = ref({
-      identifier: '',
-      password: ''
-    });
+// TEMPORALMENTE DESHABILITADO: useInitialSetup
+// Para revertir: descomentar las siguientes líneas
+// const { isInitialSetupCompleted, checkSetupStatus } = useInitialSetup()
 
-    // Verificar estado del setup inicial
-    const isSetupCompleted = computed(() => {
-      console.log('🔍 Login - Verificando estado del setup:', isInitialSetupCompleted.value)
-      // Por ahora usar el composable, pero después se cambiará a API directa
-      return isInitialSetupCompleted.value;
-    });
+const isLoading = ref(false)
+const errorMessage = ref('')
+const showRegisterModal = ref(false)
+const loginType = ref<'username' | 'email'>('username')
 
-    const goToSetup = () => {
-      console.log('🚀 Navegando a configuración inicial...')
-      window.location.href = '/initial-setup'
-    };
-
-    const handleLogin = async () => {
-      if (!credentials.value.identifier || !credentials.value.password) {
-        errorMessage.value = 'Por favor completa todos los campos';
-        return;
-      }
-
-      isLoading.value = true;
-      errorMessage.value = '';
-
-      const result = await authStore.login({
-        identifier: credentials.value.identifier,
-        password: credentials.value.password,
-        type: loginType.value
-      });
-
-      isLoading.value = false;
-
-      if (result.success) {
-        // Verificar si viene de configuración inicial
-        const setupData = localStorage.getItem('initialSetupData');
-        const isFromSetup = setupData && JSON.parse(setupData).completed;
-        
-        // Verificar si es admin y si necesita ir a configuración avanzada
-        if (isFromSetup && authStore.user && ADMIN_CONFIG.isAdminEmail(authStore.user.email)) {
-          router.push('/admin-setup');
-        } else {
-          // Verificar si el setup está completado antes de ir al dashboard
-          const setupCompleted = localStorage.getItem('initialSetupCompleted');
-          if (setupCompleted === 'true') {
-            router.push('/app/dashboard');
-          } else {
-            router.push('/initial-setup');
-          }
-        }
-      } else {
-        errorMessage.value = result.message || 'Error al iniciar sesión';
-      }
-    };
-
-    // Computed properties para configuraciones de branding
-    const loginBackground = computed(() => {
-      return settings.value?.branding?.loginBackground || '';
-    });
-    const logo = computed(() => {
-      return settings.value?.branding?.logo || '';
-    });
-    const loginTemplate = computed(() => {
-      return settings.value?.branding?.loginTemplate || 'default';
-    });
-    const showRegister = computed(() => {
-      return settings.value?.branding?.showRegister ?? true;
-    });
-
-    // Estilos dinámicos basados en configuración
-    const containerStyle = computed(() => {
-      const styles: any = {};
-      const backgroundSize = settings.value?.branding?.backgroundSize || 'cover';
-      const backgroundPosition = settings.value?.branding?.backgroundPosition || 'center';
-      const backgroundRepeat = settings.value?.branding?.backgroundRepeat || 'no-repeat';
-      const backgroundAttachment = settings.value?.branding?.backgroundAttachment || 'scroll';
-
-      if (loginBackground.value) {
-        styles.backgroundImage = `url(${loginBackground.value})`;
-        styles.backgroundSize = backgroundSize;
-        styles.backgroundPosition = backgroundPosition;
-        styles.backgroundRepeat = backgroundRepeat;
-        styles.backgroundAttachment = backgroundAttachment;
-      }
-
-      // Aplicar estilos según el template seleccionado
-      switch (loginTemplate.value) {
-        case 'modern':
-          if (loginBackground.value) {
-            styles.background = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${loginBackground.value})`;
-            styles.backgroundSize = backgroundSize;
-            styles.backgroundPosition = backgroundPosition;
-            styles.backgroundRepeat = backgroundRepeat;
-            styles.backgroundAttachment = backgroundAttachment;
-          }
-          break;
-        case 'minimal':
-          styles.background = '#ffffff';
-          break;
-        case 'gradient':
-          if (!loginBackground.value) {
-            styles.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
-            styles.backgroundSize = '200% 200%';
-            styles.animation = 'gradientShift 10s ease infinite';
-          }
-          break;
-        default:
-          if (!loginBackground.value) {
-            styles.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-          }
-      }
-
-      return styles;
-    });
-
-    onMounted(async () => {
-      console.log('🎯 Login - Componente montado')
-      await loadSettings();
-      console.log('⚙️ Login - Configuraciones cargadas')
-      await checkSetupStatus();
-      console.log('🔍 Login - Estado del setup verificado:', isInitialSetupCompleted.value)
-    });
-
-    return {
-      loginType,
-      showPassword,
-      rememberMe,
-      credentials,
-      handleLogin,
-      isLoading,
-      errorMessage,
-      loginBackground,
-      logo,
-      loginTemplate,
-      showRegister,
-      containerStyle,
-      isSetupCompleted,
-      goToSetup
-    };
-  }
+const credentials = ref({
+  identifier: '',
+  password: ''
 });
+
+// TEMPORALMENTE DESHABILITADO: Verificar estado del setup inicial
+// Para revertir: descomentar esta función completa
+// const isSetupCompleted = computed(() => {
+//   console.log('🔍 Login - Verificando estado del setup:', isInitialSetupCompleted.value)
+//   // Por ahora usar el composable, pero después se cambiará a API directa
+//   return isInitialSetupCompleted.value;
+// });
+
+// TEMPORALMENTE DESHABILITADO: Función para ir a configuración
+// Para revertir: descomentar esta función completa
+// const goToSetup = () => {
+//   console.log('🚀 Navegando a configuración inicial...')
+//   window.location.href = '/initial-setup'
+// };
+
+// CORREGIDO: handleLogin ahora pasa los parámetros correctos al store
+const handleLogin = async () => {
+  if (!credentials.value.identifier || !credentials.value.password) {
+    errorMessage.value = 'Por favor completa todos los campos'
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    console.log('🔐 Intentando iniciar sesión...')
+    console.log('📋 Datos del formulario:', {
+      identifier: credentials.value.identifier,
+      password: credentials.value.password,
+      type: loginType.value
+    })
+    
+    // CORREGIDO: Ahora paso un objeto con la estructura que espera el store
+    const result = await authStore.login({
+      identifier: credentials.value.identifier,
+      password: credentials.value.password,
+      type: loginType.value
+    })
+
+    if (result.success) {
+      console.log('✅ Login exitoso, redirigiendo...')
+      
+      // Verificar si viene de configuración inicial
+      const redirectTo = router.currentRoute.value.query.redirect as string
+      const targetRoute = redirectTo || '/app/dashboard'
+      
+      console.log('🎯 Redirigiendo a:', targetRoute)
+      await router.push(targetRoute)
+    } else {
+      console.log('❌ Login falló:', result.message)
+      errorMessage.value = result.message || 'Credenciales incorrectas'
+    }
+  } catch (error) {
+    console.error('❌ Error durante login:', error)
+    errorMessage.value = 'Error al iniciar sesión. Intenta nuevamente.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Configuración de la aplicación
+const appName = computed(() => settings.value.branding?.companyName || 'Mi Sistema')
+const logoUrl = computed(() => {
+  // Primero intentar usar el logo de la empresa configurado
+  if (settings.value.branding?.logo) {
+    return settings.value.branding.logo
+  }
+  // Si no hay logo de empresa, usar el logo de Vue como fallback
+  return '/logo.png'
+})
+const showRegister = computed(() => settings.value.branding?.showRegister === true) // Solo mostrar si es explícitamente true
+
+// Estilo del contenedor basado en la configuración
+const containerStyle = computed(() => {
+  const primaryColor = settings.value.primaryColor || '#667eea'
+  const secondaryColor = settings.value.secondaryColor || '#764ba2'
+  
+  return {
+    '--primary-color': primaryColor,
+    '--secondary-color': secondaryColor,
+    background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`
+  }
+})
+
+// TEMPORALMENTE DESHABILITADO: Verificar setup al montar
+// Para revertir: descomentar estas líneas y comentar las líneas de abajo
+// onMounted(async () => {
+//   console.log('🚀 Login montado, verificando setup...')
+//   await checkSetupStatus()
+//   console.log('✅ Verificación de setup completada')
+// })
+
+// MODIFICADO: onMounted simplificado sin verificación de setup
+onMounted(() => {
+  console.log('🚀 Login montado (setup deshabilitado temporalmente)')
+})
+
+// TEMPORALMENTE DESHABILITADO: Export statements
+// En <script setup> no se pueden usar export statements.
+// Todas las variables y funciones están automáticamente disponibles.
+// Para revertir: si es necesario exportar, cambiar a <script> normal
+// export {
+//   showRegister,
+//   containerStyle,
+//   isSetupCompleted,
+//   goToSetup
+// };
 </script>
 
 <style scoped>
+/*
+ * ============================================================================
+ * LOGIN COMPONENT STYLES - SETUP INICIAL DESHABILITADO
+ * ============================================================================
+ * 
+ * IMPORTANTE: Los estilos de configuración inicial han sido comentados.
+ * Buscar comentarios "TEMPORALMENTE DESHABILITADO" para identificar los estilos
+ * que fueron modificados.
+ * 
+ * ============================================================================
+ */
+
 .login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding: 1rem;
+  background: var(--background, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .login-card {
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  padding: 40px;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 2rem;
   width: 100%;
-  max-width: 450px;
-  animation: slideUp 0.5s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.login-logo {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-
-.login-logo img {
-  max-width: 200px;
-  max-height: 80px;
-  object-fit: contain;
+  max-width: 400px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 2rem;
 }
 
-.minimal-card {
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.login-header h1 {
-  color: #333;
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.login-header p {
-  color: #666;
-  font-size: 16px;
-}
-
-.login-options {
+.logo-section {
   display: flex;
-  gap: 10px;
-  margin-bottom: 30px;
-  background: #f5f5f5;
-  padding: 6px;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  max-height: 80px;
   border-radius: 12px;
+  object-fit: contain;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.option-btn {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.option-btn.active {
-  background: white;
-  color: #667eea;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
-  color: #333;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.input-wrapper i {
-  position: absolute;
-  left: 16px;
-  color: #999;
-  font-size: 18px;
-  pointer-events: none;
-}
-
-.input-wrapper i::before {
-  font-style: normal;
-}
-
-.icon-user::before { content: "👤"; }
-.icon-email::before { content: "📧"; }
-.icon-lock::before { content: "🔒"; }
-.icon-eye::before { content: "👁️"; }
-.icon-eye-off::before { content: "👁️‍🗨️"; }
-
-.input-wrapper input {
-  width: 100%;
-  padding: 14px 16px 14px 48px;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 15px;
-  transition: all 0.3s ease;
-  outline: none;
-}
-
-.input-wrapper input[type="password"],
-.input-wrapper input[type="text"]#password {
-  padding-right: 50px;
-}
-
-.input-wrapper input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.toggle-password {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  color: #999;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  line-height: 1;
-  height: 32px;
-  width: 32px;
-}
-
-.toggle-password:hover {
-  color: #667eea;
-}
-
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: -8px;
-}
-
-.remember-me {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #666;
-}
-
-.remember-me input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #667eea;
-}
-
-.forgot-password {
-  color: #667eea;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.forgot-password:hover {
-  color: #764ba2;
-}
-
-.error-message {
-  background: #fee;
-  color: #c33;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  text-align: center;
-  border: 1px solid #fcc;
-  margin-top: 10px;
-}
-
-.login-btn {
-  margin-top: 10px;
-  padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
+.app-title {
+  font-size: 1.5rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  color: #1f2937;
+  margin: 0;
 }
 
-.login-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
+/* TEMPORALMENTE DESHABILITADO: Estilos para configuración inicial */
+/* Para revertir: descomentar todos los estilos desde aquí hasta el comentario de fin */
 
-.login-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.login-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.signup-link {
-  text-align: center;
-  margin-top: 24px;
-  color: #666;
-  font-size: 14px;
-}
-
-.signup-link a {
-  color: #667eea;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.signup-link a:hover {
-  color: #764ba2;
-}
-
-/* Estilos para la sección de configuración inicial */
-.setup-section {
+/* .setup-section {
   text-align: center;
   padding: 2rem 0;
 }
 
 .setup-message {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1.5rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  margin-bottom: 2rem;
 }
 
 .setup-icon {
+  background: #dbeafe;
+  border-radius: 50%;
+  padding: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  background: #dbeafe;
-  border-radius: 0.75rem;
-  flex-shrink: 0;
-}
-
-.setup-text {
-  text-align: left;
-  flex: 1;
 }
 
 .setup-text h3 {
-  color: #1e293b;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 600;
+  color: #1f2937;
   margin: 0 0 0.5rem 0;
 }
 
 .setup-text p {
-  color: #64748b;
-  font-size: 0.875rem;
+  color: #6b7280;
   margin: 0;
   line-height: 1.5;
 }
 
 .setup-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: var(--primary-color, #667eea);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-  margin-bottom: 1rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 auto 1rem auto;
+  min-width: 200px;
 }
 
 .setup-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-}
-
-.setup-btn:active {
-  transform: translateY(0);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .setup-note {
+  background: #f3f4f6;
+  border-radius: 0.5rem;
   padding: 1rem;
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-  border-radius: 8px;
+  border-left: 4px solid var(--primary-color, #667eea);
 }
 
 .setup-note p {
-  color: #92400e;
-  font-size: 0.875rem;
   margin: 0;
-  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+} */
+
+/* Fin de estilos temporalmente deshabilitados */
+
+.login-options {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
 }
 
-@media (max-width: 480px) {
+.option-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.option-btn.active {
+  background: white;
+  color: #1f2937;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  color: #9ca3af;
+  width: 1rem;
+  height: 1rem;
+  z-index: 1;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+  background: white;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #667eea);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-input:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login-btn {
+  background: var(--primary-color, #667eea);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  visibility: visible;
+  opacity: 1;
+}
+
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.register-section {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  visibility: visible;
+  opacity: 1;
+  display: block;
+}
+
+.register-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.register-link {
+  color: var(--primary-color, #667eea);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.register-link:hover {
+  color: var(--secondary-color, #764ba2);
+  text-decoration: underline;
+}
+
+.additional-links {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  visibility: visible;
+  opacity: 1;
+}
+
+.link {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+}
+
+.link:hover {
+  color: var(--primary-color, #667eea);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-body {
+  padding: 1rem 1.5rem;
+}
+
+.modal-body p {
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+}
+
+.modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+.modal-footer {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .login-container {
+    padding: 0.5rem;
+  }
+  
   .login-card {
-    padding: 30px 24px;
+    padding: 1.5rem;
   }
-
-  .login-header h1 {
-    font-size: 28px;
+  
+  .app-title {
+    font-size: 1.25rem;
   }
-
-  .setup-message {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .setup-text {
-    text-align: center;
-  }
-
-  .setup-btn {
+  
+  .logo {
     width: 100%;
+    max-width: 150px;
+    max-height: 60px;
   }
 }
 </style>
